@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Sistal/ms-funcionario/internal/domain/funcionario"
 	"github.com/google/uuid"
@@ -49,7 +50,7 @@ func (r *FuncionarioRepository) GetByEmail(ctx context.Context, email string) (*
 	var f funcionario.Funcionario
 	err := r.db.WithContext(ctx).Where("email = ?", email).First(&f).Error
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err

@@ -6,6 +6,7 @@ import (
 
 	"github.com/Sistal/ms-funcionario/internal/domain/funcionario"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 var (
@@ -43,7 +44,10 @@ func (s *FuncionarioService) CreateFuncionario(ctx context.Context, f *funcionar
 func (s *FuncionarioService) GetFuncionario(ctx context.Context, id uuid.UUID) (*funcionario.Funcionario, error) {
 	f, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, ErrFuncionarioNotFound
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrFuncionarioNotFound
+		}
+		return nil, err
 	}
 	return f, nil
 }
@@ -57,18 +61,24 @@ func (s *FuncionarioService) UpdateFuncionario(ctx context.Context, f *funcionar
 		return ErrInvalidInput
 	}
 
-	existing, err := s.repo.GetByID(ctx, f.ID)
-	if err != nil || existing == nil {
-		return ErrFuncionarioNotFound
+	_, err := s.repo.GetByID(ctx, f.ID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrFuncionarioNotFound
+		}
+		return err
 	}
 
 	return s.repo.Update(ctx, f)
 }
 
 func (s *FuncionarioService) DeleteFuncionario(ctx context.Context, id uuid.UUID) error {
-	existing, err := s.repo.GetByID(ctx, id)
-	if err != nil || existing == nil {
-		return ErrFuncionarioNotFound
+	_, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrFuncionarioNotFound
+		}
+		return err
 	}
 
 	return s.repo.Delete(ctx, id)
