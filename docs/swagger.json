@@ -1,0 +1,1070 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "API RESTful para la gestión integral de funcionarios en el sistema de control de uniformes empresariales",
+        "title": "API Microservicio de Funcionarios",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Soporte API",
+            "email": "soporte@sistal.cl"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/api/v1/funcionarios": {
+            "get": {
+                "description": "Obtiene la lista de todos los funcionarios",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Listar funcionarios",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.FuncionarioResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Crea un nuevo funcionario en el sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Crear funcionario",
+                "parameters": [
+                    {
+                        "description": "Datos del funcionario",
+                        "name": "funcionario",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateFuncionarioRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FuncionarioResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/funcionarios/empresa/{id_empresa}": {
+            "get": {
+                "description": "Obtiene todos los funcionarios de una empresa",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Obtener funcionarios por empresa",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la empresa",
+                        "name": "id_empresa",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.FuncionarioResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/funcionarios/filter": {
+            "get": {
+                "description": "Obtiene funcionarios según criterios de filtrado con paginación",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Filtrar funcionarios",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "RUT del funcionario",
+                        "name": "rut_funcionario",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Email del funcionario",
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la empresa cliente",
+                        "name": "id_empresa_cliente",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la sucursal",
+                        "name": "id_sucursal",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del segmento",
+                        "name": "id_segmento",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del estado",
+                        "name": "id_estado",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del cargo",
+                        "name": "id_cargo",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Tallas registradas",
+                        "name": "tallas_registradas",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Límite de resultados",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset para paginación",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.PaginatedFuncionariosResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/funcionarios/rut/{rut}": {
+            "get": {
+                "description": "Obtiene un funcionario por su RUT",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Obtener funcionario por RUT",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "RUT del funcionario",
+                        "name": "rut",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FuncionarioResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/funcionarios/segmento/{id_segmento}": {
+            "get": {
+                "description": "Obtiene todos los funcionarios de un segmento",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Obtener funcionarios por segmento",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del segmento",
+                        "name": "id_segmento",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.FuncionarioResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/funcionarios/sucursal/{id_sucursal}": {
+            "get": {
+                "description": "Obtiene todos los funcionarios de una sucursal",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Obtener funcionarios por sucursal",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la sucursal",
+                        "name": "id_sucursal",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.FuncionarioResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/funcionarios/{id}": {
+            "get": {
+                "description": "Obtiene un funcionario por su ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Obtener funcionario",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del funcionario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FuncionarioResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Actualiza los datos de un funcionario existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Actualizar funcionario",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del funcionario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos actualizados",
+                        "name": "funcionario",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateFuncionarioRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FuncionarioResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Elimina un funcionario del sistema",
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Eliminar funcionario",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del funcionario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/funcionarios/{id}/activate": {
+            "patch": {
+                "description": "Activa un funcionario previamente desactivado",
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Activar funcionario",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del funcionario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/funcionarios/{id}/deactivate": {
+            "patch": {
+                "description": "Desactiva un funcionario sin eliminarlo",
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Desactivar funcionario",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del funcionario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/funcionarios/{id}/medidas": {
+            "get": {
+                "description": "Obtiene las medidas corporales actuales de un funcionario",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "medidas"
+                ],
+                "summary": "Obtener medidas activas",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del funcionario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MedidasResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Actualiza las medidas corporales actuales de un funcionario",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "medidas"
+                ],
+                "summary": "Actualizar medidas",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del funcionario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos actualizados",
+                        "name": "medidas",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateMedidasRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MedidasResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Registra las medidas corporales de un funcionario",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "medidas"
+                ],
+                "summary": "Crear medidas",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del funcionario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos de las medidas",
+                        "name": "medidas",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateMedidasRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MedidasResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/funcionarios/{id}/medidas/historial": {
+            "get": {
+                "description": "Obtiene todo el historial de medidas corporales de un funcionario",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "medidas"
+                ],
+                "summary": "Obtener historial de medidas",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del funcionario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.MedidasResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Verifica el estado del servicio",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health Check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.CreateFuncionarioRequest": {
+            "type": "object",
+            "required": [
+                "apellido_paterno",
+                "email",
+                "id_empresa_cliente",
+                "nombres",
+                "rut_funcionario"
+            ],
+            "properties": {
+                "apellido_materno": {
+                    "type": "string"
+                },
+                "apellido_paterno": {
+                    "type": "string"
+                },
+                "celular": {
+                    "type": "string"
+                },
+                "direccion": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id_cargo": {
+                    "type": "integer"
+                },
+                "id_empresa_cliente": {
+                    "type": "integer"
+                },
+                "id_genero": {
+                    "type": "integer"
+                },
+                "id_segmento": {
+                    "type": "integer"
+                },
+                "id_sucursal": {
+                    "type": "integer"
+                },
+                "id_usuario": {
+                    "type": "integer"
+                },
+                "nombres": {
+                    "type": "string"
+                },
+                "rut_funcionario": {
+                    "type": "string"
+                },
+                "telefono": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateMedidasRequest": {
+            "type": "object",
+            "required": [
+                "estatura_m"
+            ],
+            "properties": {
+                "cadera_cm": {
+                    "type": "number"
+                },
+                "cintura_cm": {
+                    "type": "number"
+                },
+                "estatura_m": {
+                    "type": "number"
+                },
+                "fecha_inicio": {
+                    "type": "string"
+                },
+                "manga_cm": {
+                    "type": "number"
+                },
+                "pecho_cm": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.FuncionarioResponse": {
+            "type": "object",
+            "properties": {
+                "apellido_materno": {
+                    "type": "string"
+                },
+                "apellido_paterno": {
+                    "type": "string"
+                },
+                "celular": {
+                    "type": "string"
+                },
+                "direccion": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "fecha_creacion": {
+                    "type": "string"
+                },
+                "fecha_modificacion": {
+                    "type": "string"
+                },
+                "id_cargo": {
+                    "type": "integer"
+                },
+                "id_empresa_cliente": {
+                    "type": "integer"
+                },
+                "id_estado": {
+                    "type": "integer"
+                },
+                "id_funcionario": {
+                    "type": "integer"
+                },
+                "id_genero": {
+                    "type": "integer"
+                },
+                "id_medidas": {
+                    "type": "integer"
+                },
+                "id_segmento": {
+                    "type": "integer"
+                },
+                "id_sucursal": {
+                    "type": "integer"
+                },
+                "id_usuario": {
+                    "type": "integer"
+                },
+                "nombres": {
+                    "type": "string"
+                },
+                "rut_funcionario": {
+                    "type": "string"
+                },
+                "tallas_registradas": {
+                    "type": "boolean"
+                },
+                "telefono": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.MedidasResponse": {
+            "type": "object",
+            "properties": {
+                "cadera_cm": {
+                    "type": "number"
+                },
+                "cintura_cm": {
+                    "type": "number"
+                },
+                "estatura_m": {
+                    "type": "number"
+                },
+                "fecha_fin": {
+                    "type": "string"
+                },
+                "fecha_inicio": {
+                    "type": "string"
+                },
+                "id_medidas": {
+                    "type": "integer"
+                },
+                "manga_cm": {
+                    "type": "number"
+                },
+                "pecho_cm": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.PaginatedFuncionariosResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.FuncionarioResponse"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdateFuncionarioRequest": {
+            "type": "object",
+            "properties": {
+                "apellido_materno": {
+                    "type": "string"
+                },
+                "apellido_paterno": {
+                    "type": "string"
+                },
+                "celular": {
+                    "type": "string"
+                },
+                "direccion": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id_cargo": {
+                    "type": "integer"
+                },
+                "id_empresa_cliente": {
+                    "type": "integer"
+                },
+                "id_estado": {
+                    "type": "integer"
+                },
+                "id_genero": {
+                    "type": "integer"
+                },
+                "id_segmento": {
+                    "type": "integer"
+                },
+                "id_sucursal": {
+                    "type": "integer"
+                },
+                "nombres": {
+                    "type": "string"
+                },
+                "rut_funcionario": {
+                    "type": "string"
+                },
+                "telefono": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateMedidasRequest": {
+            "type": "object",
+            "properties": {
+                "cadera_cm": {
+                    "type": "number"
+                },
+                "cintura_cm": {
+                    "type": "number"
+                },
+                "estatura_m": {
+                    "type": "number"
+                },
+                "fecha_fin": {
+                    "type": "string"
+                },
+                "manga_cm": {
+                    "type": "number"
+                },
+                "pecho_cm": {
+                    "type": "number"
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "description": "Operaciones CRUD y gestión de funcionarios",
+            "name": "funcionarios"
+        },
+        {
+            "description": "Gestión de medidas corporales de funcionarios",
+            "name": "medidas"
+        },
+        {
+            "description": "Health check del servicio",
+            "name": "health"
+        }
+    ]
+}

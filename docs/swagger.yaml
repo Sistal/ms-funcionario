@@ -1,0 +1,708 @@
+basePath: /api/v1
+definitions:
+  dto.CreateFuncionarioRequest:
+    properties:
+      apellido_materno:
+        type: string
+      apellido_paterno:
+        type: string
+      celular:
+        type: string
+      direccion:
+        type: string
+      email:
+        type: string
+      id_cargo:
+        type: integer
+      id_empresa_cliente:
+        type: integer
+      id_genero:
+        type: integer
+      id_segmento:
+        type: integer
+      id_sucursal:
+        type: integer
+      id_usuario:
+        type: integer
+      nombres:
+        type: string
+      rut_funcionario:
+        type: string
+      telefono:
+        type: string
+    required:
+    - apellido_paterno
+    - email
+    - id_empresa_cliente
+    - nombres
+    - rut_funcionario
+    type: object
+  dto.CreateMedidasRequest:
+    properties:
+      cadera_cm:
+        type: number
+      cintura_cm:
+        type: number
+      estatura_m:
+        type: number
+      fecha_inicio:
+        type: string
+      manga_cm:
+        type: number
+      pecho_cm:
+        type: number
+    required:
+    - estatura_m
+    type: object
+  dto.FuncionarioResponse:
+    properties:
+      apellido_materno:
+        type: string
+      apellido_paterno:
+        type: string
+      celular:
+        type: string
+      direccion:
+        type: string
+      email:
+        type: string
+      fecha_creacion:
+        type: string
+      fecha_modificacion:
+        type: string
+      id_cargo:
+        type: integer
+      id_empresa_cliente:
+        type: integer
+      id_estado:
+        type: integer
+      id_funcionario:
+        type: integer
+      id_genero:
+        type: integer
+      id_medidas:
+        type: integer
+      id_segmento:
+        type: integer
+      id_sucursal:
+        type: integer
+      id_usuario:
+        type: integer
+      nombres:
+        type: string
+      rut_funcionario:
+        type: string
+      tallas_registradas:
+        type: boolean
+      telefono:
+        type: string
+    type: object
+  dto.MedidasResponse:
+    properties:
+      cadera_cm:
+        type: number
+      cintura_cm:
+        type: number
+      estatura_m:
+        type: number
+      fecha_fin:
+        type: string
+      fecha_inicio:
+        type: string
+      id_medidas:
+        type: integer
+      manga_cm:
+        type: number
+      pecho_cm:
+        type: number
+    type: object
+  dto.PaginatedFuncionariosResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.FuncionarioResponse'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  dto.UpdateFuncionarioRequest:
+    properties:
+      apellido_materno:
+        type: string
+      apellido_paterno:
+        type: string
+      celular:
+        type: string
+      direccion:
+        type: string
+      email:
+        type: string
+      id_cargo:
+        type: integer
+      id_empresa_cliente:
+        type: integer
+      id_estado:
+        type: integer
+      id_genero:
+        type: integer
+      id_segmento:
+        type: integer
+      id_sucursal:
+        type: integer
+      nombres:
+        type: string
+      rut_funcionario:
+        type: string
+      telefono:
+        type: string
+    type: object
+  dto.UpdateMedidasRequest:
+    properties:
+      cadera_cm:
+        type: number
+      cintura_cm:
+        type: number
+      estatura_m:
+        type: number
+      fecha_fin:
+        type: string
+      manga_cm:
+        type: number
+      pecho_cm:
+        type: number
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: soporte@sistal.cl
+    name: Soporte API
+  description: API RESTful para la gestión integral de funcionarios en el sistema
+    de control de uniformes empresariales
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: API Microservicio de Funcionarios
+  version: "1.0"
+paths:
+  /api/v1/funcionarios:
+    get:
+      description: Obtiene la lista de todos los funcionarios
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.FuncionarioResponse'
+            type: array
+      summary: Listar funcionarios
+      tags:
+      - funcionarios
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo funcionario en el sistema
+      parameters:
+      - description: Datos del funcionario
+        in: body
+        name: funcionario
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateFuncionarioRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.FuncionarioResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crear funcionario
+      tags:
+      - funcionarios
+  /api/v1/funcionarios/{id}:
+    delete:
+      description: Elimina un funcionario del sistema
+      parameters:
+      - description: ID del funcionario
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Eliminar funcionario
+      tags:
+      - funcionarios
+    get:
+      description: Obtiene un funcionario por su ID
+      parameters:
+      - description: ID del funcionario
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FuncionarioResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener funcionario
+      tags:
+      - funcionarios
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de un funcionario existente
+      parameters:
+      - description: ID del funcionario
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos actualizados
+        in: body
+        name: funcionario
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateFuncionarioRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FuncionarioResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Actualizar funcionario
+      tags:
+      - funcionarios
+  /api/v1/funcionarios/{id}/activate:
+    patch:
+      description: Activa un funcionario previamente desactivado
+      parameters:
+      - description: ID del funcionario
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Activar funcionario
+      tags:
+      - funcionarios
+  /api/v1/funcionarios/{id}/deactivate:
+    patch:
+      description: Desactiva un funcionario sin eliminarlo
+      parameters:
+      - description: ID del funcionario
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Desactivar funcionario
+      tags:
+      - funcionarios
+  /api/v1/funcionarios/{id}/medidas:
+    get:
+      description: Obtiene las medidas corporales actuales de un funcionario
+      parameters:
+      - description: ID del funcionario
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MedidasResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener medidas activas
+      tags:
+      - medidas
+    post:
+      consumes:
+      - application/json
+      description: Registra las medidas corporales de un funcionario
+      parameters:
+      - description: ID del funcionario
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos de las medidas
+        in: body
+        name: medidas
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMedidasRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.MedidasResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crear medidas
+      tags:
+      - medidas
+    put:
+      consumes:
+      - application/json
+      description: Actualiza las medidas corporales actuales de un funcionario
+      parameters:
+      - description: ID del funcionario
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos actualizados
+        in: body
+        name: medidas
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMedidasRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MedidasResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Actualizar medidas
+      tags:
+      - medidas
+  /api/v1/funcionarios/{id}/medidas/historial:
+    get:
+      description: Obtiene todo el historial de medidas corporales de un funcionario
+      parameters:
+      - description: ID del funcionario
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.MedidasResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener historial de medidas
+      tags:
+      - medidas
+  /api/v1/funcionarios/empresa/{id_empresa}:
+    get:
+      description: Obtiene todos los funcionarios de una empresa
+      parameters:
+      - description: ID de la empresa
+        in: path
+        name: id_empresa
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.FuncionarioResponse'
+            type: array
+      summary: Obtener funcionarios por empresa
+      tags:
+      - funcionarios
+  /api/v1/funcionarios/filter:
+    get:
+      description: Obtiene funcionarios según criterios de filtrado con paginación
+      parameters:
+      - description: RUT del funcionario
+        in: query
+        name: rut_funcionario
+        type: string
+      - description: Email del funcionario
+        in: query
+        name: email
+        type: string
+      - description: ID de la empresa cliente
+        in: query
+        name: id_empresa_cliente
+        type: integer
+      - description: ID de la sucursal
+        in: query
+        name: id_sucursal
+        type: integer
+      - description: ID del segmento
+        in: query
+        name: id_segmento
+        type: integer
+      - description: ID del estado
+        in: query
+        name: id_estado
+        type: integer
+      - description: ID del cargo
+        in: query
+        name: id_cargo
+        type: integer
+      - description: Tallas registradas
+        in: query
+        name: tallas_registradas
+        type: boolean
+      - default: 20
+        description: Límite de resultados
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset para paginación
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PaginatedFuncionariosResponse'
+      summary: Filtrar funcionarios
+      tags:
+      - funcionarios
+  /api/v1/funcionarios/rut/{rut}:
+    get:
+      description: Obtiene un funcionario por su RUT
+      parameters:
+      - description: RUT del funcionario
+        in: path
+        name: rut
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FuncionarioResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener funcionario por RUT
+      tags:
+      - funcionarios
+  /api/v1/funcionarios/segmento/{id_segmento}:
+    get:
+      description: Obtiene todos los funcionarios de un segmento
+      parameters:
+      - description: ID del segmento
+        in: path
+        name: id_segmento
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.FuncionarioResponse'
+            type: array
+      summary: Obtener funcionarios por segmento
+      tags:
+      - funcionarios
+  /api/v1/funcionarios/sucursal/{id_sucursal}:
+    get:
+      description: Obtiene todos los funcionarios de una sucursal
+      parameters:
+      - description: ID de la sucursal
+        in: path
+        name: id_sucursal
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.FuncionarioResponse'
+            type: array
+      summary: Obtener funcionarios por sucursal
+      tags:
+      - funcionarios
+  /health:
+    get:
+      description: Verifica el estado del servicio
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health Check
+      tags:
+      - health
+schemes:
+- http
+- https
+swagger: "2.0"
+tags:
+- description: Operaciones CRUD y gestión de funcionarios
+  name: funcionarios
+- description: Gestión de medidas corporales de funcionarios
+  name: medidas
+- description: Health check del servicio
+  name: health

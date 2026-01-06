@@ -1,181 +1,311 @@
-# ms-funcionario
+# Microservicio de Funcionarios
 
-Microservicio de gestión de funcionarios desarrollado con Golang, utilizando el framework Gin, base de datos PostgreSQL con GORM, y siguiendo una arquitectura hexagonal.
+Microservicio RESTful para la gestión integral de funcionarios en un sistema de control de uniformes empresariales. Desarrollado en Go con Gin Framework y PostgreSQL.
 
-## Características
+## 🚀 Características Principales
 
-- Framework web: **Gin**
-- ORM: **GORM**
-- Base de datos: **PostgreSQL**
-- Arquitectura: **Hexagonal (Ports & Adapters)**
-- Contenedores: **Docker & Docker Compose**
+- ✅ **CRUD completo** de funcionarios
+- 📏 **Gestión de medidas corporales** con historial
+- 🔍 **Búsquedas avanzadas** con filtros múltiples
+- 📊 **Paginación** en listados
+- 🏢 **Consultas por empresa, sucursal y segmento**
+- 🔄 **Activación/desactivación** de funcionarios
+- 🏗️ **Arquitectura hexagonal** (Ports & Adapters)
+- 🐳 **Dockerizado** con Docker Compose
+- 📖 **Swagger UI** integrado para documentación interactiva
 
-## Arquitectura Hexagonal
+## 📋 Tecnologías
 
-El proyecto está organizado siguiendo los principios de la arquitectura hexagonal:
+- **Go** 1.23.0+
+- **Gin Web Framework** 1.11.0
+- **GORM** 1.31.1 (ORM)
+- **PostgreSQL** con driver pgx/v5
+- **Docker & Docker Compose**
+- **Swagger/OpenAPI** 3.0 para documentación
+
+## 📁 Estructura del Proyecto
 
 ```
 ms-funcionario/
-├── cmd/
-│   └── api/              # Punto de entrada de la aplicación
-├── config/               # Configuración de la aplicación
+├── cmd/api/main.go                      # Punto de entrada
+├── config/config.go                     # Configuración
 ├── internal/
-│   ├── domain/           # Capa de dominio (entidades, interfaces)
-│   │   └── funcionario/
-│   ├── application/      # Capa de aplicación (casos de uso, servicios)
-│   │   └── services/
-│   ├── infrastructure/   # Capa de infraestructura (implementaciones)
-│   │   ├── database/
-│   │   └── repository/
-│   └── interfaces/       # Capa de interfaces (HTTP, DTOs)
-│       ├── dto/
+│   ├── domain/funcionario/              # Entidades y contratos
+│   │   ├── funcionario.go               # Modelos de dominio
+│   │   └── repository.go                # Interfaces
+│   ├── application/services/            # Lógica de negocio
+│   │   └── funcionario_service.go
+│   ├── infrastructure/                  # Implementaciones
+│   │   ├── database/postgres.go
+│   │   └── repository/funcionario_repository.go
+│   └── interfaces/                      # Adaptadores HTTP
+│       ├── dto/funcionario_dto.go
 │       └── http/
-│           ├── handler/
-│           └── router/
+│           ├── handler/funcionario_handler.go
+│           └── router/router.go
 ├── docker-compose.yml
 ├── Dockerfile
-└── README.md
+└── project_framework.md                 # Documentación completa
 ```
 
-## Requisitos Previos
+## 🎯 API Endpoints
 
-- Go 1.21 o superior
-- Docker y Docker Compose
-- PostgreSQL 15 (si ejecutas localmente sin Docker)
+### Funcionarios
 
-## Instalación y Ejecución
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/v1/funcionarios` | Crear funcionario |
+| GET | `/api/v1/funcionarios` | Listar todos |
+| GET | `/api/v1/funcionarios/{id}` | Obtener por ID |
+| PUT | `/api/v1/funcionarios/{id}` | Actualizar |
+| DELETE | `/api/v1/funcionarios/{id}` | Eliminar |
+| GET | `/api/v1/funcionarios/filter` | Filtrar con paginación |
+| GET | `/api/v1/funcionarios/rut/{rut}` | Buscar por RUT |
+| GET | `/api/v1/funcionarios/empresa/{id}` | Listar por empresa |
+| GET | `/api/v1/funcionarios/sucursal/{id}` | Listar por sucursal |
+| GET | `/api/v1/funcionarios/segmento/{id}` | Listar por segmento |
+| PATCH | `/api/v1/funcionarios/{id}/activate` | Activar |
+| PATCH | `/api/v1/funcionarios/{id}/deactivate` | Desactivar |
 
-### Opción 1: Con Docker Compose (Recomendado)
+### Medidas Corporales
 
-1. Clonar el repositorio:
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/v1/funcionarios/{id}/medidas` | Registrar medidas |
+| GET | `/api/v1/funcionarios/{id}/medidas` | Obtener medidas activas |
+| PUT | `/api/v1/funcionarios/{id}/medidas` | Actualizar medidas |
+| GET | `/api/v1/funcionarios/{id}/medidas/historial` | Historial de medidas |
+
+### Health Check
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/health` | Estado del servicio |
+| GET | `/swagger/index.html` | Documentación Swagger UI |
+
+## 📖 Documentación Interactiva
+
+**Swagger UI:** Una vez que el servicio esté ejecutándose, accede a la documentación interactiva en:
+
+🔗 **http://localhost:8080/swagger/index.html**
+
+Desde Swagger UI puedes:
+- Ver todos los endpoints disponibles
+- Probar cada endpoint directamente desde el navegador
+- Ver ejemplos de request y response
+- Consultar los esquemas de datos
+
+Para más detalles, consulta [SWAGGER.md](SWAGGER.md)
+
+## 🚀 Inicio Rápido
+
+### Con Docker Compose (Recomendado)
+
 ```bash
-git clone https://github.com/Sistal/ms-funcionario.git
-cd ms-funcionario
-```
+# Levantar servicios
+docker-compose up -d
 
-2. Construir y ejecutar con Docker Compose:
-```bash
-docker-compose up --build
+# Ver logs
+docker-compose logs -f ms-funcionario
+
+# Detener servicios
+docker-compose down
 ```
 
 La aplicación estará disponible en `http://localhost:8080`
 
-### Opción 2: Ejecución Local
+### Sin Docker (Desarrollo Local)
 
-1. Instalar dependencias:
+1. **Instalar dependencias:**
 ```bash
 go mod download
 ```
 
-2. Configurar variables de entorno (copiar .env.example a .env y ajustar):
+2. **Configurar PostgreSQL** (debe estar ejecutándose)
+
+3. **Configurar variables de entorno:**
 ```bash
-cp .env.example .env
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_USER=postgres
+export DB_PASSWORD=postgres
+export DB_NAME=funcionarios_db
+export SERVER_PORT=8080
 ```
 
-3. Asegurarse de que PostgreSQL está ejecutándose
-
-4. Ejecutar la aplicación:
+4. **Ejecutar la aplicación:**
 ```bash
 go run cmd/api/main.go
 ```
 
-## API Endpoints
+## 💡 Ejemplos de Uso
 
-### Health Check
-- `GET /health` - Verificar el estado del servicio
+### Crear Funcionario
 
-### Funcionarios
-
-#### Crear Funcionario
-```bash
-POST /api/v1/funcionarios
-Content-Type: application/json
-
-{
-  "nombre": "Juan",
-  "apellido": "Pérez",
-  "email": "juan.perez@example.com",
-  "cargo": "Desarrollador"
-}
-```
-
-#### Obtener Todos los Funcionarios
-```bash
-GET /api/v1/funcionarios
-```
-
-#### Obtener Funcionario por ID
-```bash
-GET /api/v1/funcionarios/:id
-```
-
-#### Actualizar Funcionario
-```bash
-PUT /api/v1/funcionarios/:id
-Content-Type: application/json
-
-{
-  "nombre": "Juan",
-  "apellido": "Pérez",
-  "email": "juan.perez@example.com",
-  "cargo": "Senior Developer",
-  "activo": true
-}
-```
-
-#### Eliminar Funcionario
-```bash
-DELETE /api/v1/funcionarios/:id
-```
-
-## Ejemplos de Uso con cURL
-
-### Crear un funcionario:
 ```bash
 curl -X POST http://localhost:8080/api/v1/funcionarios \
   -H "Content-Type: application/json" \
   -d '{
-    "nombre": "María",
-    "apellido": "García",
-    "email": "maria.garcia@example.com",
-    "cargo": "Gerente"
+    "rut_funcionario": "12345678-9",
+    "nombres": "Juan Pablo",
+    "apellido_paterno": "González",
+    "apellido_materno": "Pérez",
+    "email": "juan.gonzalez@empresa.cl",
+    "celular": "+56912345678",
+    "direccion": "Av. Principal 123",
+    "id_empresa_cliente": 5,
+    "id_genero": 1
   }'
 ```
 
-### Listar todos los funcionarios:
+### Listar con Filtros y Paginación
+
 ```bash
-curl http://localhost:8080/api/v1/funcionarios
+curl "http://localhost:8080/api/v1/funcionarios/filter?id_empresa_cliente=5&id_estado=1&limit=20&offset=0"
 ```
 
-### Obtener un funcionario específico:
+### Buscar por RUT
+
 ```bash
-curl http://localhost:8080/api/v1/funcionarios/{id}
+curl http://localhost:8080/api/v1/funcionarios/rut/12345678-9
 ```
 
-### Actualizar un funcionario:
+### Registrar Medidas
+
 ```bash
-curl -X PUT http://localhost:8080/api/v1/funcionarios/{id} \
+curl -X POST http://localhost:8080/api/v1/funcionarios/1/medidas \
   -H "Content-Type: application/json" \
   -d '{
-    "nombre": "María",
-    "apellido": "García",
-    "email": "maria.garcia@example.com",
-    "cargo": "Gerente Senior",
-    "activo": true
+    "estatura_m": 1.75,
+    "pecho_cm": 95.5,
+    "cintura_cm": 85.0,
+    "cadera_cm": 98.0,
+    "manga_cm": 62.5
   }'
 ```
 
-### Eliminar un funcionario:
+### Obtener Medidas Activas
+
 ```bash
-curl -X DELETE http://localhost:8080/api/v1/funcionarios/{id}
+curl http://localhost:8080/api/v1/funcionarios/1/medidas
 ```
 
-## Variables de Entorno
+### Activar/Desactivar Funcionario
+
+```bash
+# Activar
+curl -X PATCH http://localhost:8080/api/v1/funcionarios/1/activate
+
+# Desactivar
+curl -X PATCH http://localhost:8080/api/v1/funcionarios/1/deactivate
+```
+
+## ⚙️ Variables de Entorno
 
 | Variable | Descripción | Valor por Defecto |
 |----------|-------------|-------------------|
 | SERVER_PORT | Puerto del servidor | 8080 |
 | DB_HOST | Host de PostgreSQL | localhost |
+| DB_PORT | Puerto de PostgreSQL | 5432 |
+| DB_USER | Usuario de base de datos | postgres |
+| DB_PASSWORD | Contraseña de base de datos | - |
+| DB_NAME | Nombre de la base de datos | funcionarios_db |
+
+## 🗄️ Modelo de Datos
+
+### Funcionario
+
+- **id_funcionario**: ID único (autoincremental)
+- **rut_funcionario**: RUT único del funcionario
+- **nombres**: Nombres completos
+- **apellido_paterno**: Apellido paterno
+- **apellido_materno**: Apellido materno
+- **celular**: Número de celular
+- **telefono**: Teléfono fijo
+- **email**: Correo electrónico único
+- **tallas_registradas**: Indica si tiene medidas
+- **direccion**: Dirección completa
+- **Relaciones**: empresa, sucursal, segmento, cargo, género, estado, medidas
+
+### Medidas Funcionario
+
+- **id_medidas**: ID único (autoincremental)
+- **estatura_m**: Estatura en metros
+- **pecho_cm**: Medida de pecho en cm
+- **cintura_cm**: Medida de cintura en cm
+- **cadera_cm**: Medida de cadera en cm
+- **manga_cm**: Medida de manga en cm
+- **fecha_inicio**: Fecha de inicio de vigencia
+- **fecha_fin**: Fecha de fin (NULL si está activa)
+
+## 🧪 Testing
+
+```bash
+# Ejecutar todos los tests
+go test ./...
+
+# Con cobertura
+go test -cover ./...
+
+# Tests específicos
+go test ./internal/application/services/...
+```
+
+## 📦 Comandos Make
+
+```bash
+make build        # Compilar la aplicación
+make run          # Ejecutar la aplicación
+make test         # Ejecutar tests
+make docker-up    # Levantar con Docker Compose
+make docker-down  # Detener Docker Compose
+make clean        # Limpiar binarios
+```
+
+## 🏗️ Arquitectura
+
+El proyecto sigue **Arquitectura Hexagonal** con separación en capas:
+
+- **Domain**: Entidades y reglas de negocio
+- **Application**: Casos de uso y servicios
+- **Infrastructure**: Implementaciones (DB, repositorios)
+- **Interfaces**: Adaptadores HTTP (handlers, DTOs, router)
+
+## 📚 Documentación Completa
+
+Para documentación técnica detallada, consulta [project_framework.md](project_framework.md)
+
+## 🔒 Seguridad
+
+- ✅ Validación de entrada con binding tags
+- ✅ Protección contra SQL injection (GORM)
+- ⚠️ Autenticación/Autorización: Pendiente de implementar
+- ⚠️ CORS: Configurar según necesidades
+
+## 🚦 Health Check
+
+```bash
+curl http://localhost:8080/health
+
+# Respuesta:
+{
+  "status": "ok",
+  "service": "ms-funcionario"
+}
+```
+
+## 📝 Licencia
+
+Este proyecto es parte del sistema Sistal de gestión de uniformes empresariales.
+
+## 👥 Contribución
+
+Para contribuir al proyecto, por favor seguir las guías de estilo de Go y crear pull requests detallados.
+
+---
+
+**Versión:** 1.0.0  
+**Última Actualización:** 5 de enero de 2026
 | DB_PORT | Puerto de PostgreSQL | 5432 |
 | DB_USER | Usuario de la base de datos | postgres |
 | DB_PASSWORD | Contraseña de la base de datos | postgres |

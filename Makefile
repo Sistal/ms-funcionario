@@ -1,4 +1,4 @@
-.PHONY: help build run test docker-build docker-up docker-down clean
+.PHONY: help build run test docker-build docker-up docker-down clean swagger
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -14,6 +14,9 @@ run: ## Run the application locally
 
 test: ## Run tests
 	go test -v ./...
+
+swagger: ## Generate Swagger documentation
+	swag init -g cmd/api/main.go -o docs
 
 docker-build: ## Build Docker image
 	docker compose build

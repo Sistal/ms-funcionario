@@ -10,7 +10,33 @@ import (
 	"github.com/Sistal/ms-funcionario/internal/infrastructure/repository"
 	"github.com/Sistal/ms-funcionario/internal/interfaces/http/handler"
 	"github.com/Sistal/ms-funcionario/internal/interfaces/http/router"
+
+	_ "github.com/Sistal/ms-funcionario/docs" // Swagger docs
 )
+
+// @title API Microservicio de Funcionarios
+// @version 1.0
+// @description API RESTful para la gestión integral de funcionarios en el sistema de control de uniformes empresariales
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name Soporte API
+// @contact.email soporte@sistal.cl
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api/v1
+// @schemes http https
+
+// @tag.name funcionarios
+// @tag.description Operaciones CRUD y gestión de funcionarios
+
+// @tag.name medidas
+// @tag.description Gestión de medidas corporales de funcionarios
+
+// @tag.name health
+// @tag.description Health check del servicio
 
 func main() {
 	log.Println("Starting ms-funcionario application...")
@@ -22,10 +48,17 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
+	// Inicializar repositorios
 	funcionarioRepo := repository.NewFuncionarioRepository(db)
-	funcionarioService := services.NewFuncionarioService(funcionarioRepo)
+	medidasRepo := repository.NewMedidasRepository(db)
+	
+	// Inicializar servicios con ambos repositorios
+	funcionarioService := services.NewFuncionarioService(funcionarioRepo, medidasRepo)
+	
+	// Inicializar handlers
 	funcionarioHandler := handler.NewFuncionarioHandler(funcionarioService)
 
+	// Configurar router
 	r := router.SetupRouter(funcionarioHandler)
 
 	serverAddr := fmt.Sprintf(":%s", cfg.ServerPort)
