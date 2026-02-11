@@ -27,7 +27,13 @@ func (r *FuncionarioRepository) Create(ctx context.Context, f *funcionario.Funci
 // GetByID obtiene un funcionario por ID
 func (r *FuncionarioRepository) GetByID(ctx context.Context, id int) (*funcionario.Funcionario, error) {
 	var f funcionario.Funcionario
-	err := r.db.WithContext(ctx).Where("id_funcionario = ?", id).First(&f).Error
+	err := r.db.WithContext(ctx).
+		Preload("Cargo").
+		Preload("Sucursal").
+		Preload("Medidas").
+		Preload("Genero").
+		Preload("Estado").
+		Where("id_funcionario = ?", id).First(&f).Error
 	if err != nil {
 		return nil, err
 	}
@@ -77,10 +83,30 @@ func (r *FuncionarioRepository) GetByEmail(ctx context.Context, email string) (*
 	return &f, nil
 }
 
+// GetByUserID obtiene un funcionario por ID de usuario
+func (r *FuncionarioRepository) GetByUserID(ctx context.Context, userID int) (*funcionario.Funcionario, error) {
+	var f funcionario.Funcionario
+	err := r.db.WithContext(ctx).
+		Preload("Cargo").
+		Preload("Sucursal").
+		Preload("Medidas").
+		Preload("Genero").
+		Preload("Estado").
+		Where("id_usuario = ?", userID).First(&f).Error
+	if err != nil {
+		return nil, err
+	}
+	return &f, nil
+}
+
 // GetByFilter obtiene funcionarios según criterios de filtrado
 func (r *FuncionarioRepository) GetByFilter(ctx context.Context, filter funcionario.FuncionarioFilter) ([]*funcionario.Funcionario, error) {
 	var funcionarios []*funcionario.Funcionario
-	query := r.db.WithContext(ctx)
+	query := r.db.WithContext(ctx).
+		Preload("Cargo").
+		Preload("Sucursal").
+		Preload("Genero").
+		Preload("Estado")
 
 	query = r.applyFilters(query, filter)
 
@@ -127,8 +153,32 @@ func (r *FuncionarioRepository) applyFilters(query *gorm.DB, filter funcionario.
 	if filter.IDCargo != nil {
 		query = query.Where("id_cargo = ?", *filter.IDCargo)
 	}
+	if filter.IDGenero != nil {
+		query = query.Where("id_genero = ?", *filter.IDGenero)
+	}
 	if filter.TallasRegistradas != nil {
 		query = query.Where("tallas_registradas = ?", *filter.TallasRegistradas)
+	}
+	// Búsqueda por texto en múltiples campos
+	if filter.Search != "" {
+		searchPattern := "%" + filter.Search + "%"
+		query = query.Where(
+			"nombres ILIKE ? OR apellido_paterno ILIKE ? OR apellido_materno ILIKE ? OR rut_funcionario ILIKE ? OR email ILIKE ?",
+			searchPattern, searchPattern, searchPattern, searchPattern, searchPattern,
+		)
+	}
+	// Ordenamiento
+	if filter.SortBy != "" {
+		order := "DESC" // default
+		if filter.Order != "" {
+			if filter.Order == "asc" || filter.Order == "ASC" {
+				order = "ASC"
+			}
+		}
+		query = query.Order(filter.SortBy + " " + order)
+	} else {
+		// Ordenamiento por defecto
+		query = query.Order("fecha_creación DESC")
 	}
 	return query
 }
@@ -156,18 +206,18 @@ func (r *FuncionarioRepository) GetBySegmento(ctx context.Context, idSegmento in
 
 // ActivateByID activa un funcionario
 func (r *FuncionarioRepository) ActivateByID(ctx context.Context, id int) error {
-	// Asumiendo que existe un id_estado donde 1 = activo
+	// Estado 10 = Activo según contrato
 	return r.db.WithContext(ctx).Model(&funcionario.Funcionario{}).
 		Where("id_funcionario = ?", id).
-		Update("id_estado", 1).Error
+		Update("id_estado", 10).Error
 }
 
 // DeactivateByID desactiva un funcionario
 func (r *FuncionarioRepository) DeactivateByID(ctx context.Context, id int) error {
-	// Asumiendo que existe un id_estado donde 2 = inactivo
+	// Estado 11 = Inactivo (asumido, ajustar según tabla Estado real)
 	return r.db.WithContext(ctx).Model(&funcionario.Funcionario{}).
 		Where("id_funcionario = ?", id).
-		Update("id_estado", 2).Error
+		Update("id_estado", 11).Error
 }
 
 // MedidasRepository implementa las operaciones de medidas

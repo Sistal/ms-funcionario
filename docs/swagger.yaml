@@ -1,5 +1,22 @@
 basePath: /api/v1
 definitions:
+  dto.CargoDTO:
+    properties:
+      id_cargo:
+        type: integer
+      nombre_cargo:
+        type: string
+    type: object
+  dto.ContactUpdateRequest:
+    properties:
+      celular:
+        type: string
+      email:
+        type: string
+    required:
+    - celular
+    - email
+    type: object
   dto.CreateFuncionarioRequest:
     properties:
       apellido_materno:
@@ -15,6 +32,9 @@ definitions:
       id_cargo:
         type: integer
       id_empresa_cliente:
+        type: integer
+      id_estado:
+        description: 'default: 10 (Activo)'
         type: integer
       id_genero:
         type: integer
@@ -33,7 +53,9 @@ definitions:
     required:
     - apellido_paterno
     - email
-    - id_empresa_cliente
+    - id_cargo
+    - id_genero
+    - id_sucursal
     - nombres
     - rut_funcionario
     type: object
@@ -54,47 +76,84 @@ definitions:
     required:
     - estatura_m
     type: object
+  dto.ErrorResponse:
+    properties:
+      errors:
+        items:
+          $ref: '#/definitions/dto.FieldError'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  dto.EstadoDTO:
+    properties:
+      id_estado:
+        type: integer
+      nombre_estado:
+        type: string
+      tabla_estado:
+        type: string
+    type: object
+  dto.FieldError:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+    type: object
   dto.FuncionarioResponse:
     properties:
       apellido_materno:
         type: string
       apellido_paterno:
         type: string
+      cargo:
+        $ref: '#/definitions/dto.CargoDTO'
       celular:
         type: string
       direccion:
         type: string
       email:
         type: string
+      estado:
+        $ref: '#/definitions/dto.EstadoDTO'
       fecha_creacion:
         type: string
       fecha_modificacion:
         type: string
-      id_cargo:
-        type: integer
+      genero:
+        $ref: '#/definitions/dto.GeneroDTO'
       id_empresa_cliente:
-        type: integer
-      id_estado:
         type: integer
       id_funcionario:
         type: integer
-      id_genero:
-        type: integer
-      id_medidas:
-        type: integer
       id_segmento:
         type: integer
-      id_sucursal:
-        type: integer
-      id_usuario:
-        type: integer
+      medidas:
+        $ref: '#/definitions/dto.MedidasResponse'
+      nombre_completo:
+        type: string
       nombres:
         type: string
       rut_funcionario:
         type: string
+      sucursal:
+        $ref: '#/definitions/dto.SucursalDTO'
       tallas_registradas:
         type: boolean
       telefono:
+        description: Campos adicionales (no en contrato pero presentes en BD)
+        type: string
+      usuario:
+        $ref: '#/definitions/dto.UsuarioDTO'
+    type: object
+  dto.GeneroDTO:
+    properties:
+      id_genero:
+        type: integer
+      nombre_genero:
         type: string
     type: object
   dto.MedidasResponse:
@@ -109,6 +168,8 @@ definitions:
         type: string
       fecha_inicio:
         type: string
+      id_funcionario:
+        type: integer
       id_medidas:
         type: integer
       manga_cm:
@@ -130,6 +191,89 @@ definitions:
         type: integer
       total_pages:
         type: integer
+    type: object
+  dto.PaginatedResponse:
+    properties:
+      data: {}
+      meta:
+        $ref: '#/definitions/dto.PaginationMeta'
+      success:
+        type: boolean
+    type: object
+  dto.PaginationMeta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  dto.ProfileResponse:
+    properties:
+      apellido_materno:
+        type: string
+      apellido_paterno:
+        type: string
+      cargo:
+        $ref: '#/definitions/dto.CargoDTO'
+      celular:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      medidas:
+        $ref: '#/definitions/dto.MedidasResponse'
+      nombres:
+        type: string
+      rut:
+        type: string
+      sucursal:
+        $ref: '#/definitions/dto.SucursalDTO'
+      tallas_registradas:
+        type: boolean
+    type: object
+  dto.RolDTO:
+    properties:
+      id_rol:
+        type: integer
+      nombre_rol:
+        type: string
+    type: object
+  dto.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  dto.SucursalDTO:
+    properties:
+      direccion:
+        type: string
+      estado:
+        $ref: '#/definitions/dto.EstadoDTO'
+      estado_sucursal:
+        type: integer
+      id_sucursal:
+        type: integer
+      nombre_sucursal:
+        type: string
+      total_funcionarios:
+        type: integer
+    type: object
+  dto.TransferRequest:
+    properties:
+      reason:
+        type: string
+      target_branch_id:
+        type: integer
+    required:
+    - target_branch_id
     type: object
   dto.UpdateFuncionarioRequest:
     properties:
@@ -157,9 +301,8 @@ definitions:
         type: integer
       nombres:
         type: string
-      rut_funcionario:
-        type: string
       telefono:
+        description: Campos adicionales (no en contrato pero presentes en BD)
         type: string
     type: object
   dto.UpdateMedidasRequest:
@@ -177,6 +320,17 @@ definitions:
       pecho_cm:
         type: number
     type: object
+  dto.UsuarioDTO:
+    properties:
+      id_usuario:
+        type: integer
+      nombre_completo:
+        type: string
+      nombre_usuario:
+        type: string
+      rol:
+        $ref: '#/definitions/dto.RolDTO'
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -191,25 +345,206 @@ info:
   title: API Microservicio de Funcionarios
   version: "1.0"
 paths:
-  /api/v1/funcionarios:
+  /api/v1/branches:
     get:
-      description: Obtiene la lista de todos los funcionarios
+      description: Obtiene todas las sucursales disponibles
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.FuncionarioResponse'
-            type: array
+            $ref: '#/definitions/dto.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar sucursales
+      tags:
+      - sucursales
+  /api/v1/cargos:
+    get:
+      description: Obtiene la lista de todos los cargos disponibles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessResponse'
+      summary: Listar cargos
+      tags:
+      - catálogos
+  /api/v1/employees/{userId}/contact:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID o 'me'
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: Datos de contacto
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ContactUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProfileResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar contacto
+      tags:
+      - employees
+  /api/v1/employees/{userId}/measurements:
+    get:
+      parameters:
+      - description: User ID o 'me'
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MedidasResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener medidas
+      tags:
+      - employees
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID o 'me'
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: Medidas
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMedidasRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProfileResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar medidas
+      tags:
+      - employees
+  /api/v1/employees/{userId}/profile:
+    get:
+      description: Obtiene los datos del funcionario por User ID (o "me")
+      parameters:
+      - description: User ID o 'me'
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProfileResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener perfil
+      tags:
+      - employees
+  /api/v1/funcionarios:
+    get:
+      description: Obtiene la lista de funcionarios con paginación y filtros
+      parameters:
+      - default: 1
+        description: Página
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Límite por página
+        in: query
+        name: limit
+        type: integer
+      - description: ID de la sucursal
+        in: query
+        name: id_sucursal
+        type: integer
+      - description: ID del estado
+        in: query
+        name: id_estado
+        type: integer
+      - description: ID del género
+        in: query
+        name: id_genero
+        type: integer
+      - description: ID del cargo
+        in: query
+        name: id_cargo
+        type: integer
+      - description: Tallas registradas
+        in: query
+        name: tallas_registradas
+        type: boolean
+      - description: Buscar en nombres, apellidos, RUT, email
+        in: query
+        name: search
+        type: string
+      - default: '"fecha_creación"'
+        description: Campo de ordenamiento
+        in: query
+        name: sort_by
+        type: string
+      - default: '"desc"'
+        description: Orden (asc|desc)
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PaginatedResponse'
+      security:
+      - BearerAuth: []
       summary: Listar funcionarios
       tags:
       - funcionarios
     post:
       consumes:
       - application/json
-      description: Crea un nuevo funcionario en el sistema
+      description: Crea un nuevo funcionario en el sistema (requiere rol admin)
       parameters:
       - description: Datos del funcionario
         in: body
@@ -223,25 +558,24 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.FuncionarioResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Crear funcionario
       tags:
       - funcionarios
   /api/v1/funcionarios/{id}:
     delete:
-      description: Elimina un funcionario del sistema
+      description: Desactiva un funcionario del sistema - eliminación lógica (requiere
+        rol admin)
       parameters:
       - description: ID del funcionario
         in: path
@@ -249,20 +583,20 @@ paths:
         required: true
         type: integer
       responses:
-        "204":
-          description: No Content
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Eliminar funcionario
       tags:
       - funcionarios
@@ -280,26 +614,24 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.FuncionarioResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Obtener funcionario
       tags:
       - funcionarios
     put:
       consumes:
       - application/json
-      description: Actualiza los datos de un funcionario existente
+      description: Actualiza los datos de un funcionario existente (requiere rol admin)
       parameters:
       - description: ID del funcionario
         in: path
@@ -318,25 +650,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.FuncionarioResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Actualizar funcionario
       tags:
       - funcionarios
   /api/v1/funcionarios/{id}/activate:
     patch:
-      description: Activa un funcionario previamente desactivado
+      description: Activa un funcionario previamente desactivado (requiere rol admin)
       parameters:
       - description: ID del funcionario
         in: path
@@ -347,27 +677,23 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Activar funcionario
       tags:
       - funcionarios
   /api/v1/funcionarios/{id}/deactivate:
     patch:
-      description: Desactiva un funcionario sin eliminarlo
+      description: Desactiva un funcionario sin eliminarlo (requiere rol admin)
       parameters:
       - description: ID del funcionario
         in: path
@@ -378,21 +704,17 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Desactivar funcionario
       tags:
       - funcionarios
@@ -411,19 +733,17 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.MedidasResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Obtener medidas activas
       tags:
       - medidas
@@ -449,19 +769,17 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.MedidasResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Crear medidas
       tags:
       - medidas
@@ -487,19 +805,17 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.MedidasResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Actualizar medidas
       tags:
       - medidas
@@ -518,24 +834,45 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.MedidasResponse'
-            type: array
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Obtener historial de medidas
       tags:
       - medidas
+  /api/v1/funcionarios/buscar/rut/{rut}:
+    get:
+      description: Obtiene un funcionario por su RUT
+      parameters:
+      - description: RUT del funcionario
+        in: path
+        name: rut
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener funcionario por RUT
+      tags:
+      - funcionarios
   /api/v1/funcionarios/empresa/{id_empresa}:
     get:
       description: Obtiene todos los funcionarios de una empresa
@@ -551,9 +888,9 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.FuncionarioResponse'
-            type: array
+            $ref: '#/definitions/dto.SuccessResponse'
+      security:
+      - BearerAuth: []
       summary: Obtener funcionarios por empresa
       tags:
       - funcionarios
@@ -610,32 +947,31 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.PaginatedFuncionariosResponse'
+      security:
+      - BearerAuth: []
       summary: Filtrar funcionarios
       tags:
       - funcionarios
-  /api/v1/funcionarios/rut/{rut}:
+  /api/v1/funcionarios/me/stats:
     get:
-      description: Obtiene un funcionario por su RUT
-      parameters:
-      - description: RUT del funcionario
-        in: path
-        name: rut
-        required: true
-        type: string
+      description: Obtiene las estadísticas del funcionario autenticado
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.FuncionarioResponse'
-        "404":
-          description: Not Found
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Obtener funcionario por RUT
+      security:
+      - BearerAuth: []
+      summary: Obtener estadísticas
       tags:
       - funcionarios
   /api/v1/funcionarios/segmento/{id_segmento}:
@@ -653,9 +989,9 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.FuncionarioResponse'
-            type: array
+            $ref: '#/definitions/dto.SuccessResponse'
+      security:
+      - BearerAuth: []
       summary: Obtener funcionarios por segmento
       tags:
       - funcionarios
@@ -674,12 +1010,57 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.FuncionarioResponse'
-            type: array
+            $ref: '#/definitions/dto.SuccessResponse'
+      security:
+      - BearerAuth: []
       summary: Obtener funcionarios por sucursal
       tags:
       - funcionarios
+  /api/v1/generos:
+    get:
+      description: Obtiene la lista de todos los géneros disponibles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessResponse'
+      summary: Listar géneros
+      tags:
+      - catálogos
+  /api/v1/transfers:
+    post:
+      consumes:
+      - application/json
+      description: Solicita un traslado de sucursal para el funcionario autenticado
+      parameters:
+      - description: Datos traslado
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TransferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Solicitar traslado
+      tags:
+      - traslados
   /health:
     get:
       description: Verifica el estado del servicio
@@ -689,20 +1070,32 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.SuccessResponse'
       summary: Health Check
       tags:
       - health
 schemes:
 - http
 - https
+securityDefinitions:
+  BearerAuth:
+    description: 'Autenticación mediante token JWT. Formato: "Bearer {token}"'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
 tags:
 - description: Operaciones CRUD y gestión de funcionarios
   name: funcionarios
 - description: Gestión de medidas corporales de funcionarios
   name: medidas
+- description: Endpoints del BFF para funcionarios (perfil y medidas)
+  name: employees
+- description: Catálogos de datos maestros (cargos, géneros)
+  name: catálogos
+- description: Gestión de sucursales
+  name: sucursales
+- description: Solicitudes de traslado
+  name: traslados
 - description: Health check del servicio
   name: health

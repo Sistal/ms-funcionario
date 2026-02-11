@@ -19,21 +19,24 @@ var (
 )
 
 type FuncionarioService struct {
-	repo        funcionario.Repository
-	medidasRepo funcionario.MedidasRepository
+	repo         funcionario.Repository
+	medidasRepo  funcionario.MedidasRepository
+	sucursalRepo funcionario.SucursalRepository
 }
 
-func NewFuncionarioService(repo funcionario.Repository, medidasRepo funcionario.MedidasRepository) *FuncionarioService {
+func NewFuncionarioService(repo funcionario.Repository, medidasRepo funcionario.MedidasRepository, sucursalRepo funcionario.SucursalRepository) *FuncionarioService {
 	return &FuncionarioService{
-		repo:        repo,
-		medidasRepo: medidasRepo,
+		repo:         repo,
+		medidasRepo:  medidasRepo,
+		sucursalRepo: sucursalRepo,
 	}
 }
 
 // CreateFuncionario crea un nuevo funcionario
 func (s *FuncionarioService) CreateFuncionario(ctx context.Context, f *funcionario.Funcionario) error {
-	if f.Nombres == "" || f.ApellidoPaterno == "" || f.Email == "" || f.RutFuncionario == "" {
-		return ErrInvalidInput
+	// Validar campos usando el m\u00e9todo Validate del dominio
+	if err := f.Validate(); err != nil {
+		return fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
 
 	// Verificar que no exista por RUT
@@ -52,10 +55,10 @@ func (s *FuncionarioService) CreateFuncionario(ctx context.Context, f *funcionar
 	now := time.Now()
 	f.FechaCreacion = &now
 	f.TallasRegistradas = false
-	
-	// Establecer estado activo por defecto (1 = activo)
+
+	// Estado activo por defecto (10 seg\u00fan contrato)
 	if f.IDEstado == nil {
-		estado := 1
+		estado := 10
 		f.IDEstado = &estado
 	}
 
@@ -65,6 +68,18 @@ func (s *FuncionarioService) CreateFuncionario(ctx context.Context, f *funcionar
 // GetFuncionario obtiene un funcionario por ID
 func (s *FuncionarioService) GetFuncionario(ctx context.Context, id int) (*funcionario.Funcionario, error) {
 	f, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrFuncionarioNotFound
+		}
+		return nil, err
+	}
+	return f, nil
+}
+
+// GetFuncionarioByUserID obtiene un funcionario por ID de usuario
+func (s *FuncionarioService) GetFuncionarioByUserID(ctx context.Context, userID int) (*funcionario.Funcionario, error) {
+	f, err := s.repo.GetByUserID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrFuncionarioNotFound
@@ -177,6 +192,11 @@ func (s *FuncionarioService) DeactivateFuncionario(ctx context.Context, id int) 
 
 // CreateMedidas crea nuevas medidas para un funcionario
 func (s *FuncionarioService) CreateMedidas(ctx context.Context, idFuncionario int, medidas *funcionario.MedidasFuncionario) error {
+	// Validar rangos de medidas
+	if err := funcionario.ValidateMedidas(medidas); err != nil {
+		return fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+
 	// Verificar que el funcionario existe
 	f, err := s.repo.GetByID(ctx, idFuncionario)
 	if err != nil {
@@ -259,6 +279,11 @@ func (s *FuncionarioService) GetHistorialMedidas(ctx context.Context, idFunciona
 
 // UpdateMedidas actualiza las medidas activas de un funcionario
 func (s *FuncionarioService) UpdateMedidas(ctx context.Context, idFuncionario int, medidas *funcionario.MedidasFuncionario) error {
+	// Validar rangos de medidas
+	if err := funcionario.ValidateMedidas(medidas); err != nil {
+		return fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+
 	f, err := s.repo.GetByID(ctx, idFuncionario)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -273,4 +298,70 @@ func (s *FuncionarioService) UpdateMedidas(ctx context.Context, idFuncionario in
 
 	medidas.IDMedidas = *f.IDMedidas
 	return s.medidasRepo.Update(ctx, medidas)
+}
+
+// ListBranches returns all branches
+func (s *FuncionarioService) ListBranches(ctx context.Context) ([]*funcionario.Sucursal, error) {
+	return s.sucursalRepo.FindAll(ctx)
+}
+
+// UpdateContact updates only contact info
+func (s *FuncionarioService) UpdateContact(ctx context.Context, userID int, email, celular string) error {
+	f, err := s.repo.GetByUserID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if f == nil {
+		return ErrFuncionarioNotFound
+	}
+
+	f.Email = email
+	f.Celular = celular
+
+	now := time.Now()
+	f.FechaModificacion = &now
+	return s.repo.Update(ctx, f)
+}
+
+// RequestTransfer updates branch directly (temporary implementation)
+func (s *FuncionarioService) RequestTransfer(ctx context.Context, userID int, targetBranchID int, reason string) error {
+	f, err := s.repo.GetByUserID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if f == nil {
+		return ErrFuncionarioNotFound
+	}
+
+	// Verify target branch exists
+	_, err = s.sucursalRepo.GetByID(ctx, targetBranchID)
+	if err != nil {
+		return fmt.Errorf("branch error: %w", err)
+	}
+
+	// Direct update as per temporary requirement
+	f.IDSucursal = &targetBranchID
+
+	now := time.Now()
+	f.FechaModificacion = &now
+	return s.repo.Update(ctx, f)
+}
+
+// ManageMeasurements creates or updates measurements for user ID
+func (s *FuncionarioService) ManageMeasurements(ctx context.Context, userID int, medidas *funcionario.MedidasFuncionario) error {
+	f, err := s.repo.GetByUserID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if f == nil {
+		return ErrFuncionarioNotFound
+	}
+
+	if f.IDMedidas == nil {
+		// Create new
+		return s.CreateMedidas(ctx, f.IDFuncionario, medidas)
+	} else {
+		// Update existing
+		return s.UpdateMedidas(ctx, f.IDFuncionario, medidas)
+	}
 }

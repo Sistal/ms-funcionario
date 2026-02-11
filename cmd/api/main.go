@@ -6,6 +6,7 @@ import (
 
 	"github.com/Sistal/ms-funcionario/config"
 	"github.com/Sistal/ms-funcionario/internal/application/services"
+	"github.com/Sistal/ms-funcionario/internal/infrastructure/auth"
 	"github.com/Sistal/ms-funcionario/internal/infrastructure/database"
 	"github.com/Sistal/ms-funcionario/internal/infrastructure/repository"
 	"github.com/Sistal/ms-funcionario/internal/interfaces/http/handler"
@@ -35,8 +36,25 @@ import (
 // @tag.name medidas
 // @tag.description Gestión de medidas corporales de funcionarios
 
+// @tag.name employees
+// @tag.description Endpoints del BFF para funcionarios (perfil y medidas)
+
+// @tag.name catálogos
+// @tag.description Catálogos de datos maestros (cargos, géneros)
+
+// @tag.name sucursales
+// @tag.description Gestión de sucursales
+
+// @tag.name traslados
+// @tag.description Solicitudes de traslado
+
 // @tag.name health
 // @tag.description Health check del servicio
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Autenticación mediante token JWT. Formato: "Bearer {token}"
 
 func main() {
 	log.Println("Starting ms-funcionario application...")
@@ -48,18 +66,27 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
+	// Inicializar cliente de autenticación
+	authClient := auth.NewClient(cfg.AuthServiceURL)
+
 	// Inicializar repositorios
 	funcionarioRepo := repository.NewFuncionarioRepository(db)
 	medidasRepo := repository.NewMedidasRepository(db)
-	
-	// Inicializar servicios con ambos repositorios
-	funcionarioService := services.NewFuncionarioService(funcionarioRepo, medidasRepo)
-	
+	sucursalRepo := repository.NewSucursalRepository(db)
+	cargoRepo := repository.NewCargoRepository(db)
+	generoRepo := repository.NewGeneroRepository(db)
+
+	// Inicializar servicios
+	funcionarioService := services.NewFuncionarioService(funcionarioRepo, medidasRepo, sucursalRepo)
+	catalogoService := services.NewCatalogoService(cargoRepo, generoRepo)
+
 	// Inicializar handlers
 	funcionarioHandler := handler.NewFuncionarioHandler(funcionarioService)
+	profileHandler := handler.NewProfileHandler(funcionarioService)
+	catalogoHandler := handler.NewCatalogoHandler(catalogoService)
 
 	// Configurar router
-	r := router.SetupRouter(funcionarioHandler)
+	r := router.SetupRouter(funcionarioHandler, profileHandler, catalogoHandler, cfg.AllowedOrigins, authClient)
 
 	serverAddr := fmt.Sprintf(":%s", cfg.ServerPort)
 	log.Printf("Server starting on port %s", cfg.ServerPort)

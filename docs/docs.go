@@ -23,9 +23,232 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/branches": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene todas las sucursales disponibles",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sucursales"
+                ],
+                "summary": "Listar sucursales",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cargos": {
+            "get": {
+                "description": "Obtiene la lista de todos los cargos disponibles",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "catálogos"
+                ],
+                "summary": "Listar cargos",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/employees/{userId}/contact": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employees"
+                ],
+                "summary": "Actualizar contacto",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID o 'me'",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos de contacto",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ContactUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ProfileResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/employees/{userId}/measurements": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employees"
+                ],
+                "summary": "Obtener medidas",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID o 'me'",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MedidasResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employees"
+                ],
+                "summary": "Actualizar medidas",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID o 'me'",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Medidas",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateMedidasRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ProfileResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/employees/{userId}/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene los datos del funcionario por User ID (o \"me\")",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employees"
+                ],
+                "summary": "Obtener perfil",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID o 'me'",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ProfileResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/funcionarios": {
             "get": {
-                "description": "Obtiene la lista de todos los funcionarios",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene la lista de funcionarios con paginación y filtros",
                 "produces": [
                     "application/json"
                 ],
@@ -33,20 +256,88 @@ const docTemplate = `{
                     "funcionarios"
                 ],
                 "summary": "Listar funcionarios",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Página",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Límite por página",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la sucursal",
+                        "name": "id_sucursal",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del estado",
+                        "name": "id_estado",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del género",
+                        "name": "id_genero",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID del cargo",
+                        "name": "id_cargo",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Tallas registradas",
+                        "name": "tallas_registradas",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Buscar en nombres, apellidos, RUT, email",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"fecha_creación\"",
+                        "description": "Campo de ordenamiento",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"desc\"",
+                        "description": "Orden (asc|desc)",
+                        "name": "order",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.FuncionarioResponse"
-                            }
+                            "$ref": "#/definitions/dto.PaginatedResponse"
                         }
                     }
                 }
             },
             "post": {
-                "description": "Crea un nuevo funcionario en el sistema",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea un nuevo funcionario en el sistema (requiere rol admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -72,25 +363,59 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.FuncionarioResponse"
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/funcionarios/buscar/rut/{rut}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene un funcionario por su RUT",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funcionarios"
+                ],
+                "summary": "Obtener funcionario por RUT",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "RUT del funcionario",
+                        "name": "rut",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SuccessResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -98,6 +423,11 @@ const docTemplate = `{
         },
         "/api/v1/funcionarios/empresa/{id_empresa}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Obtiene todos los funcionarios de una empresa",
                 "produces": [
                     "application/json"
@@ -119,10 +449,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.FuncionarioResponse"
-                            }
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     }
                 }
@@ -130,6 +457,11 @@ const docTemplate = `{
         },
         "/api/v1/funcionarios/filter": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Obtiene funcionarios según criterios de filtrado con paginación",
                 "produces": [
                     "application/json"
@@ -212,34 +544,31 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/funcionarios/rut/{rut}": {
+        "/api/v1/funcionarios/me/stats": {
             "get": {
-                "description": "Obtiene un funcionario por su RUT",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene las estadísticas del funcionario autenticado",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "funcionarios"
                 ],
-                "summary": "Obtener funcionario por RUT",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "RUT del funcionario",
-                        "name": "rut",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
+                "summary": "Obtener estadísticas",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.FuncionarioResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -252,6 +581,11 @@ const docTemplate = `{
         },
         "/api/v1/funcionarios/segmento/{id_segmento}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Obtiene todos los funcionarios de un segmento",
                 "produces": [
                     "application/json"
@@ -273,10 +607,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.FuncionarioResponse"
-                            }
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     }
                 }
@@ -284,6 +615,11 @@ const docTemplate = `{
         },
         "/api/v1/funcionarios/sucursal/{id_sucursal}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Obtiene todos los funcionarios de una sucursal",
                 "produces": [
                     "application/json"
@@ -305,10 +641,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.FuncionarioResponse"
-                            }
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     }
                 }
@@ -316,6 +649,11 @@ const docTemplate = `{
         },
         "/api/v1/funcionarios/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Obtiene un funcionario por su ID",
                 "produces": [
                     "application/json"
@@ -337,31 +675,30 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.FuncionarioResponse"
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
             },
             "put": {
-                "description": "Actualiza los datos de un funcionario existente",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza los datos de un funcionario existente (requiere rol admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -394,31 +731,30 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.FuncionarioResponse"
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
             },
             "delete": {
-                "description": "Elimina un funcionario del sistema",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Desactiva un funcionario del sistema - eliminación lógica (requiere rol admin)",
                 "tags": [
                     "funcionarios"
                 ],
@@ -433,25 +769,22 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "No Content"
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SuccessResponse"
+                        }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -459,7 +792,12 @@ const docTemplate = `{
         },
         "/api/v1/funcionarios/{id}/activate": {
             "patch": {
-                "description": "Activa un funcionario previamente desactivado",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Activa un funcionario previamente desactivado (requiere rol admin)",
                 "tags": [
                     "funcionarios"
                 ],
@@ -477,28 +815,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -506,7 +835,12 @@ const docTemplate = `{
         },
         "/api/v1/funcionarios/{id}/deactivate": {
             "patch": {
-                "description": "Desactiva un funcionario sin eliminarlo",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Desactiva un funcionario sin eliminarlo (requiere rol admin)",
                 "tags": [
                     "funcionarios"
                 ],
@@ -524,28 +858,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -553,6 +878,11 @@ const docTemplate = `{
         },
         "/api/v1/funcionarios/{id}/medidas": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Obtiene las medidas corporales actuales de un funcionario",
                 "produces": [
                     "application/json"
@@ -574,30 +904,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MedidasResponse"
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Actualiza las medidas corporales actuales de un funcionario",
                 "consumes": [
                     "application/json"
@@ -631,30 +960,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MedidasResponse"
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Registra las medidas corporales de un funcionario",
                 "consumes": [
                     "application/json"
@@ -688,25 +1016,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.MedidasResponse"
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -714,6 +1036,11 @@ const docTemplate = `{
         },
         "/api/v1/funcionarios/{id}/medidas/historial": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Obtiene todo el historial de medidas corporales de un funcionario",
                 "produces": [
                     "application/json"
@@ -735,28 +1062,90 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.MedidasResponse"
-                            }
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/generos": {
+            "get": {
+                "description": "Obtiene la lista de todos los géneros disponibles",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "catálogos"
+                ],
+                "summary": "Listar géneros",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/transfers": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Solicita un traslado de sucursal para el funcionario autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "traslados"
+                ],
+                "summary": "Solicitar traslado",
+                "parameters": [
+                    {
+                        "description": "Datos traslado",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.TransferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -776,10 +1165,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.SuccessResponse"
                         }
                     }
                 }
@@ -787,12 +1173,40 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.CargoDTO": {
+            "type": "object",
+            "properties": {
+                "id_cargo": {
+                    "type": "integer"
+                },
+                "nombre_cargo": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ContactUpdateRequest": {
+            "type": "object",
+            "required": [
+                "celular",
+                "email"
+            ],
+            "properties": {
+                "celular": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.CreateFuncionarioRequest": {
             "type": "object",
             "required": [
                 "apellido_paterno",
                 "email",
-                "id_empresa_cliente",
+                "id_cargo",
+                "id_genero",
+                "id_sucursal",
                 "nombres",
                 "rut_funcionario"
             ],
@@ -816,6 +1230,10 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "id_empresa_cliente": {
+                    "type": "integer"
+                },
+                "id_estado": {
+                    "description": "default: 10 (Activo)",
                     "type": "integer"
                 },
                 "id_genero": {
@@ -867,6 +1285,48 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.FieldError"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.EstadoDTO": {
+            "type": "object",
+            "properties": {
+                "id_estado": {
+                    "type": "integer"
+                },
+                "nombre_estado": {
+                    "type": "string"
+                },
+                "tabla_estado": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.FieldError": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.FuncionarioResponse": {
             "type": "object",
             "properties": {
@@ -875,6 +1335,9 @@ const docTemplate = `{
                 },
                 "apellido_paterno": {
                     "type": "string"
+                },
+                "cargo": {
+                    "$ref": "#/definitions/dto.CargoDTO"
                 },
                 "celular": {
                     "type": "string"
@@ -885,38 +1348,32 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "estado": {
+                    "$ref": "#/definitions/dto.EstadoDTO"
+                },
                 "fecha_creacion": {
                     "type": "string"
                 },
                 "fecha_modificacion": {
                     "type": "string"
                 },
-                "id_cargo": {
-                    "type": "integer"
+                "genero": {
+                    "$ref": "#/definitions/dto.GeneroDTO"
                 },
                 "id_empresa_cliente": {
-                    "type": "integer"
-                },
-                "id_estado": {
                     "type": "integer"
                 },
                 "id_funcionario": {
                     "type": "integer"
                 },
-                "id_genero": {
-                    "type": "integer"
-                },
-                "id_medidas": {
-                    "type": "integer"
-                },
                 "id_segmento": {
                     "type": "integer"
                 },
-                "id_sucursal": {
-                    "type": "integer"
+                "medidas": {
+                    "$ref": "#/definitions/dto.MedidasResponse"
                 },
-                "id_usuario": {
-                    "type": "integer"
+                "nombre_completo": {
+                    "type": "string"
                 },
                 "nombres": {
                     "type": "string"
@@ -924,10 +1381,28 @@ const docTemplate = `{
                 "rut_funcionario": {
                     "type": "string"
                 },
+                "sucursal": {
+                    "$ref": "#/definitions/dto.SucursalDTO"
+                },
                 "tallas_registradas": {
                     "type": "boolean"
                 },
                 "telefono": {
+                    "description": "Campos adicionales (no en contrato pero presentes en BD)",
+                    "type": "string"
+                },
+                "usuario": {
+                    "$ref": "#/definitions/dto.UsuarioDTO"
+                }
+            }
+        },
+        "dto.GeneroDTO": {
+            "type": "object",
+            "properties": {
+                "id_genero": {
+                    "type": "integer"
+                },
+                "nombre_genero": {
                     "type": "string"
                 }
             }
@@ -949,6 +1424,9 @@ const docTemplate = `{
                 },
                 "fecha_inicio": {
                     "type": "string"
+                },
+                "id_funcionario": {
+                    "type": "integer"
                 },
                 "id_medidas": {
                     "type": "integer"
@@ -980,6 +1458,133 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.PaginatedResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "meta": {
+                    "$ref": "#/definitions/dto.PaginationMeta"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ProfileResponse": {
+            "type": "object",
+            "properties": {
+                "apellido_materno": {
+                    "type": "string"
+                },
+                "apellido_paterno": {
+                    "type": "string"
+                },
+                "cargo": {
+                    "$ref": "#/definitions/dto.CargoDTO"
+                },
+                "celular": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "medidas": {
+                    "$ref": "#/definitions/dto.MedidasResponse"
+                },
+                "nombres": {
+                    "type": "string"
+                },
+                "rut": {
+                    "type": "string"
+                },
+                "sucursal": {
+                    "$ref": "#/definitions/dto.SucursalDTO"
+                },
+                "tallas_registradas": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.RolDTO": {
+            "type": "object",
+            "properties": {
+                "id_rol": {
+                    "type": "integer"
+                },
+                "nombre_rol": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.SucursalDTO": {
+            "type": "object",
+            "properties": {
+                "direccion": {
+                    "type": "string"
+                },
+                "estado": {
+                    "$ref": "#/definitions/dto.EstadoDTO"
+                },
+                "estado_sucursal": {
+                    "type": "integer"
+                },
+                "id_sucursal": {
+                    "type": "integer"
+                },
+                "nombre_sucursal": {
+                    "type": "string"
+                },
+                "total_funcionarios": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TransferRequest": {
+            "type": "object",
+            "required": [
+                "target_branch_id"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                },
+                "target_branch_id": {
                     "type": "integer"
                 }
             }
@@ -1023,10 +1628,8 @@ const docTemplate = `{
                 "nombres": {
                     "type": "string"
                 },
-                "rut_funcionario": {
-                    "type": "string"
-                },
                 "telefono": {
+                    "description": "Campos adicionales (no en contrato pero presentes en BD)",
                     "type": "string"
                 }
             }
@@ -1053,6 +1656,31 @@ const docTemplate = `{
                     "type": "number"
                 }
             }
+        },
+        "dto.UsuarioDTO": {
+            "type": "object",
+            "properties": {
+                "id_usuario": {
+                    "type": "integer"
+                },
+                "nombre_completo": {
+                    "type": "string"
+                },
+                "nombre_usuario": {
+                    "type": "string"
+                },
+                "rol": {
+                    "$ref": "#/definitions/dto.RolDTO"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Autenticación mediante token JWT. Formato: \"Bearer {token}\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     },
     "tags": [
@@ -1063,6 +1691,22 @@ const docTemplate = `{
         {
             "description": "Gestión de medidas corporales de funcionarios",
             "name": "medidas"
+        },
+        {
+            "description": "Endpoints del BFF para funcionarios (perfil y medidas)",
+            "name": "employees"
+        },
+        {
+            "description": "Catálogos de datos maestros (cargos, géneros)",
+            "name": "catálogos"
+        },
+        {
+            "description": "Gestión de sucursales",
+            "name": "sucursales"
+        },
+        {
+            "description": "Solicitudes de traslado",
+            "name": "traslados"
         },
         {
             "description": "Health check del servicio",
