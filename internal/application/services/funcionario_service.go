@@ -58,7 +58,7 @@ func (s *FuncionarioService) CreateFuncionario(ctx context.Context, f *funcionar
 
 	// Estado activo por defecto (10 seg\u00fan contrato)
 	if f.IDEstado == nil {
-		estado := 10
+		estado := 1
 		f.IDEstado = &estado
 	}
 

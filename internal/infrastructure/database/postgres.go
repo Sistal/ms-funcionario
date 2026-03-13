@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/Sistal/ms-funcionario/config"
-	"github.com/Sistal/ms-funcionario/internal/domain/funcionario"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -40,10 +39,10 @@ func NewPostgresDB(cfg *config.Config) (*gorm.DB, error) {
 
 func runMigrations(db *gorm.DB) error {
 	log.Println("Running database migrations...")
-	
-	if err := db.AutoMigrate(&funcionario.Funcionario{}); err != nil {
-		return err
-	}
+
+	//if err := db.AutoMigrate(&funcionario.Funcionario{}); err != nil {
+	//	return err
+	//}
 
 	log.Println("Migrations completed successfully")
 	return nil

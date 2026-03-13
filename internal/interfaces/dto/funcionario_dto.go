@@ -174,6 +174,17 @@ type PaginatedFuncionariosResponse struct {
 	TotalPages int                    `json:"total_pages"`
 }
 
+// RegisterFuncionarioRequest es el DTO para registrar un funcionario (endpoint dedicado)
+type RegisterFuncionarioRequest struct {
+	RutFuncionario  string `json:"rut_funcionario" binding:"required"`
+	Nombres         string `json:"nombres" binding:"required"`
+	ApellidoPaterno string `json:"apellido_paterno" binding:"required"`
+	ApellidoMaterno string `json:"apellido_materno"`
+	Email           string `json:"email" binding:"required,email"`
+	IDGenero        *int   `json:"genero"`
+	UserID          *int   `json:"user_id"`
+}
+
 // Convertidores de dominio a DTO
 
 func ToFuncionarioResponse(f *funcionario.Funcionario) *FuncionarioResponse {
@@ -450,5 +461,27 @@ func ToProfileResponse(f *funcionario.Funcionario) *ProfileResponse {
 		Celular:           f.Celular,
 		TallasRegistradas: f.TallasRegistradas,
 		Medidas:           medidasResp,
+	}
+}
+
+func (req *RegisterFuncionarioRequest) ToFuncionario() *funcionario.Funcionario {
+	// Default estado to 10 (Activo)
+	estado := 1
+
+	// Mapear user_id a IDUsuario si está presente
+	var idUsuario *int
+	if req.UserID != nil {
+		idUsuario = req.UserID
+	}
+
+	return &funcionario.Funcionario{
+		RutFuncionario:  req.RutFuncionario,
+		Nombres:         req.Nombres,
+		ApellidoPaterno: req.ApellidoPaterno,
+		ApellidoMaterno: req.ApellidoMaterno,
+		Email:           req.Email,
+		IDGenero:        req.IDGenero,
+		IDUsuario:       idUsuario,
+		IDEstado:        &estado,
 	}
 }

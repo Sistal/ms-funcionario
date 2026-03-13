@@ -1,7 +1,6 @@
 package router
 
 import (
-	"github.com/Sistal/ms-funcionario/internal/infrastructure/auth"
 	"github.com/Sistal/ms-funcionario/internal/infrastructure/middleware"
 	"github.com/Sistal/ms-funcionario/internal/interfaces/http/handler"
 	"github.com/gin-gonic/gin"
@@ -10,7 +9,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func SetupRouter(funcionarioHandler *handler.FuncionarioHandler, profileHandler *handler.ProfileHandler, catalogoHandler *handler.CatalogoHandler, allowedOrigins string, authClient *auth.Client) *gin.Engine {
+func SetupRouter(funcionarioHandler *handler.FuncionarioHandler, profileHandler *handler.ProfileHandler, catalogoHandler *handler.CatalogoHandler, allowedOrigins string) *gin.Engine {
 	router := gin.Default()
 
 	// CORS Middleware
@@ -22,9 +21,8 @@ func SetupRouter(funcionarioHandler *handler.FuncionarioHandler, profileHandler 
 	// Health check endpoint
 	router.GET("/health", funcionarioHandler.HealthCheck)
 
-	// API v1 routes (protegidas con autenticación)
+	// API v1 routes (sin autenticación requerida)
 	v1 := router.Group("/api/v1")
-	v1.Use(middleware.AuthMiddleware(authClient))
 	{
 		// Contract Routes (/employees) - BFF endpoints
 		employees := v1.Group("/employees")
@@ -49,12 +47,15 @@ func SetupRouter(funcionarioHandler *handler.FuncionarioHandler, profileHandler 
 		// Rutas de funcionarios
 		funcionarios := v1.Group("/funcionarios")
 		{
-			// CRUD básico (requiere admin para POST, PUT, DELETE)
-			funcionarios.POST("", middleware.RequireAdmin(), funcionarioHandler.CreateFuncionario)
+			// CRUD básico
+			funcionarios.POST("", funcionarioHandler.CreateFuncionario)
 			funcionarios.GET("", funcionarioHandler.GetAllFuncionarios)
 			funcionarios.GET("/:id", funcionarioHandler.GetFuncionario)
-			funcionarios.PUT("/:id", middleware.RequireAdmin(), funcionarioHandler.UpdateFuncionario)
-			funcionarios.DELETE("/:id", middleware.RequireAdmin(), funcionarioHandler.DeleteFuncionario)
+			funcionarios.PUT("/:id", funcionarioHandler.UpdateFuncionario)
+			funcionarios.DELETE("/:id", funcionarioHandler.DeleteFuncionario)
+
+			// Búsquedas específicas
+			funcionarios.GET("/by-usuario/:userId", funcionarioHandler.GetFuncionarioByUserID)
 
 			// Búsquedas - IMPORTANTE: Estas deben ir ANTES de /:id para evitar conflictos
 			funcionarios.GET("/filter", funcionarioHandler.GetFuncionariosByFilter)
@@ -64,14 +65,17 @@ func SetupRouter(funcionarioHandler *handler.FuncionarioHandler, profileHandler 
 			funcionarios.GET("/segmento/:id_segmento", funcionarioHandler.GetFuncionariosBySegmento)
 
 			// Activación/Desactivación
-			funcionarios.PATCH("/:id/activate", middleware.RequireAdmin(), funcionarioHandler.ActivateFuncionario)
-			funcionarios.PATCH("/:id/deactivate", middleware.RequireAdmin(), funcionarioHandler.DeactivateFuncionario)
+			funcionarios.PATCH("/:id/activate", funcionarioHandler.ActivateFuncionario)
+			funcionarios.PATCH("/:id/deactivate", funcionarioHandler.DeactivateFuncionario)
 
 			// Rutas de medidas
 			funcionarios.POST("/:id/medidas", funcionarioHandler.CreateMedidas)
 			funcionarios.GET("/:id/medidas", funcionarioHandler.GetMedidasActivas)
 			funcionarios.PUT("/:id/medidas", funcionarioHandler.UpdateMedidas)
 			funcionarios.GET("/:id/medidas/historial", funcionarioHandler.GetHistorialMedidas)
+
+			// Registrar funcionario (flujo alternativo)
+			funcionarios.POST("/register", funcionarioHandler.RegisterFuncionario)
 		}
 	}
 

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -68,9 +69,85 @@ func (h *FuncionarioHandler) CreateFuncionario(c *gin.Context) {
 		return
 	}
 
+	// Recargar funcionario para obtener relaciones pobladas (necesario para contrato BFF)
+	if createdFuncionario, err := h.service.GetFuncionario(c.Request.Context(), funcionario.IDFuncionario); err == nil {
+		funcionario = createdFuncionario
+	}
+
 	c.JSON(http.StatusCreated, dto.NewSuccessResponseWithMessage(
 		dto.ToFuncionarioResponse(funcionario),
 		"Funcionario creado exitosamente",
+	))
+}
+
+// RegisterFuncionario crea un nuevo funcionario usando el modelo de registro dedicado
+// @Summary Registrar funcionario
+// @Description Registra un nuevo funcionario en el sistema con un modelo simplificado
+// @Tags funcionarios
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param funcionario body dto.RegisterFuncionarioRequest true "Datos del funcionario para registro"
+// @Success 201 {object} dto.SuccessResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 409 {object} dto.ErrorResponse
+// @Router /api/v1/funcionarios/register [post]
+func (h *FuncionarioHandler) RegisterFuncionario(c *gin.Context) {
+	log.Println("Iniciando solicitud de registro de funcionario (/register)")
+
+	var req dto.RegisterFuncionarioRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("Error de validación de payload en registro: %v", err)
+		c.JSON(http.StatusBadRequest, dto.NewErrorResponse("Error en la validación", dto.FieldError{
+			Field:   "request",
+			Message: err.Error(),
+		}))
+		return
+	}
+
+	log.Printf("Payload de registro recibido para RUT: %s, Email: %s", req.RutFuncionario, req.Email)
+
+	funcionario := req.ToFuncionario()
+	if err := h.service.CreateFuncionario(c.Request.Context(), funcionario); err != nil {
+		log.Printf("Error intentando crear funcionario [RUT: %s]: %v", req.RutFuncionario, err)
+		if errors.Is(err, services.ErrFuncionarioAlreadyExists) {
+			// Determinar si es RUT o email duplicado
+			fieldName := "rut_funcionario"
+			if errors.Is(err, services.ErrFuncionarioAlreadyExists) && req.Email != "" {
+				fieldName = "email"
+			}
+			c.JSON(http.StatusConflict, dto.NewErrorResponse("Error en la validación", dto.FieldError{
+				Field:   fieldName,
+				Message: err.Error(),
+			}))
+			return
+		}
+		if errors.Is(err, services.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, dto.NewErrorResponse("Error en la validación", dto.FieldError{
+				Field:   "request",
+				Message: err.Error(),
+			}))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, dto.NewErrorResponse("Error interno del servidor"))
+		return
+	}
+
+	log.Printf("Funcionario creado base exitosamente (ID: %d). Procediendo a recargar relaciones...", funcionario.IDFuncionario)
+
+	// Recargar funcionario para obtener relaciones pobladas
+	if createdFuncionario, err := h.service.GetFuncionario(c.Request.Context(), funcionario.IDFuncionario); err == nil {
+		funcionario = createdFuncionario
+		log.Printf("Relaciones cargadas correctamente para funcionario ID: %d", funcionario.IDFuncionario)
+	} else {
+		log.Printf("Advertencia: No se pudieron cargar las relaciones para el funcionario creado (ID: %d): %v", funcionario.IDFuncionario, err)
+	}
+
+	log.Printf("Registro completado exitosamente para funcionario ID: %d, RUT: %s", funcionario.IDFuncionario, req.RutFuncionario)
+
+	c.JSON(http.StatusCreated, dto.NewSuccessResponseWithMessage(
+		dto.ToFuncionarioResponse(funcionario),
+		"Funcionario registrado exitosamente",
 	))
 }
 
@@ -87,8 +164,11 @@ func (h *FuncionarioHandler) CreateFuncionario(c *gin.Context) {
 // @Router /api/v1/funcionarios/{id} [get]
 func (h *FuncionarioHandler) GetFuncionario(c *gin.Context) {
 	idParam := c.Param("id")
+	log.Printf("Solicitud para obtener funcionario con ID: %s", idParam)
+
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
+		log.Printf("Error: ID inválido: %s", idParam)
 		c.JSON(http.StatusBadRequest, dto.NewErrorResponse("Formato de ID inválido"))
 		return
 	}
@@ -96,13 +176,16 @@ func (h *FuncionarioHandler) GetFuncionario(c *gin.Context) {
 	funcionario, err := h.service.GetFuncionario(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, services.ErrFuncionarioNotFound) {
+			log.Printf("Funcionario con ID %d no encontrado", id)
 			c.JSON(http.StatusNotFound, dto.NewErrorResponse("Funcionario no encontrado"))
 			return
 		}
+		log.Printf("Error interno al obtener funcionario con ID %d: %v", id, err)
 		c.JSON(http.StatusInternalServerError, dto.NewErrorResponse("Error interno del servidor"))
 		return
 	}
 
+	log.Printf("Funcionario con ID %d obtenido exitosamente", id)
 	c.JSON(http.StatusOK, dto.NewSuccessResponse(dto.ToFuncionarioResponse(funcionario)))
 }
 
@@ -747,4 +830,49 @@ func (h *FuncionarioHandler) RequestTransfer(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dto.NewSuccessResponseWithMessage(nil, "Traslado solicitado exitosamente"))
+}
+
+// GetFuncionarioByUserID obtiene el ID de funcionario asociado a un usuario
+// @Summary Obtener ID de funcionario por ID de usuario
+// @Description Obtiene el ID del funcionario asociado a un usuario específico
+// @Tags funcionarios
+// @Security BearerAuth
+// @Produce json
+// @Param userId path int true "ID del usuario"
+// @Success 200 {object} dto.SuccessResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Router /api/v1/funcionarios/by-usuario/{userId} [get]
+func (h *FuncionarioHandler) GetFuncionarioByUserID(c *gin.Context) {
+	userIdParam := c.Param("userId")
+	log.Printf("[GetFuncionarioByUserID] Inicio solicitud. Param userId recibido: '%s'", userIdParam)
+
+	userId, err := strconv.Atoi(userIdParam)
+	if err != nil {
+		log.Printf("[GetFuncionarioByUserID] Error validación: UserID no es un número válido: '%s'. Error: %v", userIdParam, err)
+		c.JSON(http.StatusBadRequest, dto.NewErrorResponse("Formato de UserID inválido"))
+		return
+	}
+
+	log.Printf("[GetFuncionarioByUserID] Consultando servicio para UserID: %d", userId)
+	funcionario, err := h.service.GetFuncionarioByUserID(c.Request.Context(), userId)
+	if err != nil {
+		if errors.Is(err, services.ErrFuncionarioNotFound) {
+			log.Printf("[GetFuncionarioByUserID] Funcionario NO encontrado para UserID: %d", userId)
+			c.JSON(http.StatusNotFound, dto.NewErrorResponse("Funcionario no encontrado para este usuario"))
+			return
+		}
+		log.Printf("[GetFuncionarioByUserID] Error interno DB al buscar UserID %d: %v", userId, err)
+		c.JSON(http.StatusInternalServerError, dto.NewErrorResponse("Error interno del servidor"))
+		return
+	}
+
+	log.Printf("[GetFuncionarioByUserID] Funcionario ENCONTRADO. ID Funcionario: %d (asociado a UserID: %d)", funcionario.IDFuncionario, userId)
+
+	// Retornamos solo el ID como se solicitó
+	responseData := map[string]int{
+		"id_funcionario": funcionario.IDFuncionario,
+	}
+
+	log.Printf("[GetFuncionarioByUserID] Enviando respuesta 200 OK. Payload data: %+v", responseData)
+	c.JSON(http.StatusOK, dto.NewSuccessResponse(responseData))
 }

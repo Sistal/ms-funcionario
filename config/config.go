@@ -17,6 +17,7 @@ type Config struct {
 	DBSSLMode      string
 	AllowedOrigins string
 	AuthServiceURL string
+	ApiKey         string
 }
 
 func LoadConfig() *Config {
@@ -29,14 +30,15 @@ func LoadConfig() *Config {
 
 	config := &Config{
 		ServerPort:     getEnv("SERVER_PORT", "8081"),
-		DBHost:         getEnv("DB_HOST", "localhost"),
-		DBPort:         getEnv("DB_PORT", "5432"),
-		DBUser:         getEnv("DB_USER", "postgres"),
-		DBPassword:     getEnv("DB_PASSWORD", "postgres"),
+		DBHost:         getEnv("DB_HOST", "aws-1-sa-east-1.pooler.supabase.com"),
+		DBPort:         getEnv("DB_PORT", "6543"),
+		DBUser:         getEnv("DB_USER", "postgres.fbcdvhoectqyofnezwfe"),
+		DBPassword:     getEnv("DB_PASSWORD", "QqODFGGDCAKyD5h6"),
 		DBName:         getEnv("DB_NAME", "postgres"),
 		DBSSLMode:      getEnv("DB_SSLMODE", "disable"),
-		AllowedOrigins: getEnv("ALLOWED_ORIGINS", "http://localhost:5174"),
-		AuthServiceURL: getEnv("AUTH_SERVICE_URL", "http://localhost:8080"),
+		AllowedOrigins: getEnv("ALLOWED_ORIGINS", "http://localhost:8080"),
+		AuthServiceURL: getEnv("AUTH_SERVICE_URL", "http://localhost:8081"),
+		ApiKey:         getEnv("API_KEY", "changeme"),
 	}
 
 	// Log de configuración (sin mostrar password)

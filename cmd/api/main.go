@@ -6,7 +6,6 @@ import (
 
 	"github.com/Sistal/ms-funcionario/config"
 	"github.com/Sistal/ms-funcionario/internal/application/services"
-	"github.com/Sistal/ms-funcionario/internal/infrastructure/auth"
 	"github.com/Sistal/ms-funcionario/internal/infrastructure/database"
 	"github.com/Sistal/ms-funcionario/internal/infrastructure/repository"
 	"github.com/Sistal/ms-funcionario/internal/interfaces/http/handler"
@@ -66,9 +65,6 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	// Inicializar cliente de autenticación
-	authClient := auth.NewClient(cfg.AuthServiceURL)
-
 	// Inicializar repositorios
 	funcionarioRepo := repository.NewFuncionarioRepository(db)
 	medidasRepo := repository.NewMedidasRepository(db)
@@ -86,7 +82,7 @@ func main() {
 	catalogoHandler := handler.NewCatalogoHandler(catalogoService)
 
 	// Configurar router
-	r := router.SetupRouter(funcionarioHandler, profileHandler, catalogoHandler, cfg.AllowedOrigins, authClient)
+	r := router.SetupRouter(funcionarioHandler, profileHandler, catalogoHandler, cfg.AllowedOrigins)
 
 	serverAddr := fmt.Sprintf(":%s", cfg.ServerPort)
 	log.Printf("Server starting on port %s", cfg.ServerPort)
