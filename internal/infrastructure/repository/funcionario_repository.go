@@ -41,7 +41,7 @@ func (r *FuncionarioRepository) GetByID(ctx context.Context, id int) (*funcionar
 		SELECT id_funcionario, rut_funcionario, nombres, apellido_paterno, apellido_materno, 
 		       celular, telefono, email, tallas_registradas, direccion, fecha_creación, fecha_modificación,
 		       id_genero, id_medidas, id_usuario, id_estado, id_sucursal, id_empresa_cliente, id_segmento, id_cargo
-		FROM "Funcionario" WHERE id_funcionario = %d LIMIT 1`, id)
+		FROM "Funcionario" WHERE id_funcionario = %d`, id)
 
 	err = sqlDB.QueryRowContext(ctx, query).Scan(
 		&f.IDFuncionario, &f.RutFuncionario, &f.Nombres, &f.ApellidoPaterno, &f.ApellidoMaterno,
@@ -165,7 +165,7 @@ func (r *FuncionarioRepository) GetByUserID(ctx context.Context, userID int) (*f
 		return nil, err
 	}
 
-	query := fmt.Sprintf(`SELECT id_funcionario FROM "Funcionario" WHERE id_usuario = %d LIMIT 1`, userID)
+	query := fmt.Sprintf(`SELECT id_funcionario FROM "Funcionario" WHERE id_usuario = %d`, userID)
 
 	// Ejecutamos QueryRow directa
 	// Solo necesitamos el ID para este endpoint, escaneamos solo eso para minimizar errores de mapeo
