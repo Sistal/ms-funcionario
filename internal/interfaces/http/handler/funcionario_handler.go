@@ -832,9 +832,9 @@ func (h *FuncionarioHandler) RequestTransfer(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.NewSuccessResponseWithMessage(nil, "Traslado solicitado exitosamente"))
 }
 
-// GetFuncionarioByUserID obtiene el ID de funcionario asociado a un usuario
-// @Summary Obtener ID de funcionario por ID de usuario
-// @Description Obtiene el ID del funcionario asociado a un usuario específico
+// GetFuncionarioByUserID obtiene el funcionario asociado a un usuario
+// @Summary Obtener funcionario por ID de usuario
+// @Description Obtiene el funcionario asociado a un usuario específico
 // @Tags funcionarios
 // @Security BearerAuth
 // @Produce json
@@ -868,11 +868,6 @@ func (h *FuncionarioHandler) GetFuncionarioByUserID(c *gin.Context) {
 
 	log.Printf("[GetFuncionarioByUserID] Funcionario ENCONTRADO. ID Funcionario: %d (asociado a UserID: %d)", funcionario.IDFuncionario, userId)
 
-	// Retornamos solo el ID como se solicitó
-	responseData := map[string]int{
-		"id_funcionario": funcionario.IDFuncionario,
-	}
-
-	log.Printf("[GetFuncionarioByUserID] Enviando respuesta 200 OK. Payload data: %+v", responseData)
-	c.JSON(http.StatusOK, dto.NewSuccessResponse(responseData))
+	log.Printf("[GetFuncionarioByUserID] Enviando respuesta 200 OK con los datos del funcionario: %d", funcionario.IDFuncionario)
+	c.JSON(http.StatusOK, dto.NewSuccessResponse(dto.ToFuncionarioResponse(funcionario)))
 }
