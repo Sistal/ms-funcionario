@@ -156,10 +156,6 @@ func (r *FuncionarioRepository) GetByEmail(ctx context.Context, email string) (*
 
 // GetByUserID obtiene un funcionario por ID de usuario
 func (r *FuncionarioRepository) GetByUserID(ctx context.Context, userID int) (*funcionario.Funcionario, error) {
-	var f funcionario.Funcionario
-
-	// ESTRATEGIA FINAL DE EMERGENCIA: Bypass total de GORM
-	// Usamos directamente sql.DB para ejecutar la query sin ningún middleware de GORM
 	sqlDB, err := r.db.DB()
 	if err != nil {
 		return nil, err
@@ -167,21 +163,18 @@ func (r *FuncionarioRepository) GetByUserID(ctx context.Context, userID int) (*f
 
 	query := fmt.Sprintf(`SELECT id_funcionario FROM "Funcionario" WHERE id_usuario = %d`, userID)
 
-	// Ejecutamos QueryRow directa
-	// Solo necesitamos el ID para este endpoint, escaneamos solo eso para minimizar errores de mapeo
 	var idFuncionario int
 	err = sqlDB.QueryRowContext(ctx, query).Scan(&idFuncionario)
 
 	if err != nil {
-		// Si no hay filas, sql.ErrNoRows
-		if err.Error() == "sql: no rows in result set" {
+		if err == sql.ErrNoRows || err.Error() == "sql: no rows in result set" {
 			return nil, nil // No encontrado
 		}
 		return nil, err
 	}
 
-	f.IDFuncionario = idFuncionario
-	return &f, nil
+	// Como necesitamos todos los datos y GetByID ya hace la carga completa exitosamente:
+	return r.GetByID(ctx, idFuncionario)
 }
 
 // GetByFilter obtiene funcionarios según criterios de filtrado
