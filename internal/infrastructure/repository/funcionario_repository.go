@@ -35,6 +35,11 @@ func (r *FuncionarioRepository) GetByID(ctx context.Context, id int) (*funcionar
 		return nil, err
 	}
 
+	// Variables para manejar posibles NULLs en strings
+	var apellidoMaterno, celular, telefono, direccion, email sql.NullString
+	// Nota: Nombres, ApellidoPaterno y RutFuncionario deberían ser NOT NULL, pero por seguridad podríamos manejarlos igual si fuera legacy.
+	// Asumimos que los PK y mandatory fields están bien.
+
 	// 1. Cargar Funcionario Base (bypass GORM)
 	// Nota: Las columnas fecha_creación y fecha_modificación llevan tilde en la BD
 	query := fmt.Sprintf(`
@@ -44,8 +49,8 @@ func (r *FuncionarioRepository) GetByID(ctx context.Context, id int) (*funcionar
 		FROM "Funcionario" WHERE id_funcionario = %d`, id)
 
 	err = sqlDB.QueryRowContext(ctx, query).Scan(
-		&f.IDFuncionario, &f.RutFuncionario, &f.Nombres, &f.ApellidoPaterno, &f.ApellidoMaterno,
-		&f.Celular, &f.Telefono, &f.Email, &f.TallasRegistradas, &f.Direccion, &f.FechaCreacion, &f.FechaModificacion,
+		&f.IDFuncionario, &f.RutFuncionario, &f.Nombres, &f.ApellidoPaterno, &apellidoMaterno,
+		&celular, &telefono, &email, &f.TallasRegistradas, &direccion, &f.FechaCreacion, &f.FechaModificacion,
 		&f.IDGenero, &f.IDMedidas, &f.IDUsuario, &f.IDEstado, &f.IDSucursal, &f.IDEmpresaCliente, &f.IDSegmento, &f.IDCargo,
 	)
 
@@ -54,6 +59,23 @@ func (r *FuncionarioRepository) GetByID(ctx context.Context, id int) (*funcionar
 			return nil, gorm.ErrRecordNotFound
 		}
 		return nil, err
+	}
+
+	// Asignar valores desde NullString
+	if apellidoMaterno.Valid {
+		f.ApellidoMaterno = apellidoMaterno.String
+	}
+	if celular.Valid {
+		f.Celular = celular.String
+	}
+	if telefono.Valid {
+		f.Telefono = telefono.String
+	}
+	if direccion.Valid {
+		f.Direccion = direccion.String
+	}
+	if email.Valid {
+		f.Email = email.String
 	}
 
 	// 2. Cargar Relaciones (bypass GORM)

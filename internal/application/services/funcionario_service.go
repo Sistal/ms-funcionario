@@ -110,18 +110,83 @@ func (s *FuncionarioService) UpdateFuncionario(ctx context.Context, f *funcionar
 		return ErrInvalidInput
 	}
 
-	_, err := s.repo.GetByID(ctx, f.IDFuncionario)
+	// 1. Obtener el funcionario existente
+	existing, err := s.repo.GetByID(ctx, f.IDFuncionario)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) || err == ErrFuncionarioNotFound {
 			return ErrFuncionarioNotFound
 		}
+		// Mapeo de errores de DB a errores de dominio si es necesario
 		return err
 	}
+	if existing == nil {
+		return ErrFuncionarioNotFound
+	}
 
+	// 2. Merge de campos (Solo actualizamos lo que viene con valor)
+	// Strings (asumimos que vacío significa no cambiar)
+	if f.RutFuncionario != "" {
+		existing.RutFuncionario = f.RutFuncionario
+	}
+	if f.Nombres != "" {
+		existing.Nombres = f.Nombres
+	}
+	if f.ApellidoPaterno != "" {
+		existing.ApellidoPaterno = f.ApellidoPaterno
+	}
+	if f.ApellidoMaterno != "" {
+		existing.ApellidoMaterno = f.ApellidoMaterno
+	}
+	if f.Celular != "" {
+		existing.Celular = f.Celular
+	}
+	if f.Telefono != "" {
+		existing.Telefono = f.Telefono
+	}
+	if f.Email != "" {
+		existing.Email = f.Email
+	}
+	if f.Direccion != "" {
+		existing.Direccion = f.Direccion
+	}
+
+	// IDs / FKs (Punteros) - Si no son nil, actualizamos
+	if f.IDGenero != nil {
+		existing.IDGenero = f.IDGenero
+	}
+	if f.IDEstado != nil {
+		existing.IDEstado = f.IDEstado
+	}
+	if f.IDSucursal != nil {
+		existing.IDSucursal = f.IDSucursal
+	}
+	if f.IDCargo != nil {
+		existing.IDCargo = f.IDCargo
+	}
+	if f.IDEmpresaCliente != nil {
+		existing.IDEmpresaCliente = f.IDEmpresaCliente
+	}
+	if f.IDSegmento != nil {
+		existing.IDSegmento = f.IDSegmento
+	}
+	if f.IDUsuario != nil {
+		existing.IDUsuario = f.IDUsuario
+	}
+	if f.IDMedidas != nil {
+		existing.IDMedidas = f.IDMedidas
+	}
+
+	// Actualizar fecha modificación
 	now := time.Now()
-	f.FechaModificacion = &now
+	existing.FechaModificacion = &now
 
-	return s.repo.Update(ctx, f)
+	// 3. Validar el objeto final antes de guardar
+	if err := existing.Validate(); err != nil {
+		return fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+
+	// 4. Guardar cambios
+	return s.repo.Update(ctx, existing)
 }
 
 // DeleteFuncionario elimina un funcionario
