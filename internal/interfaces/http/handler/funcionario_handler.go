@@ -636,7 +636,11 @@ func (h *FuncionarioHandler) GetMedidasActivas(c *gin.Context) {
 			return
 		}
 		if errors.Is(err, services.ErrMedidasNotFound) {
-			c.JSON(http.StatusNotFound, dto.NewErrorResponse("El funcionario no tiene medidas registradas"))
+			// Si no hay medidas, devolver éxito pero con los valores vacíos
+			emptyMedidas := dto.MedidasResponse{
+				IDFuncionario: id,
+			}
+			c.JSON(http.StatusOK, dto.NewSuccessResponse(emptyMedidas))
 			return
 		}
 		c.JSON(http.StatusInternalServerError, dto.NewErrorResponse("Error interno del servidor"))
