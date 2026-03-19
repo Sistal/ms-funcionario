@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Sistal/ms-funcionario/internal/domain/funcionario"
 	"gorm.io/gorm"
@@ -320,6 +321,17 @@ func (r *FuncionarioRepository) DeactivateByID(ctx context.Context, id int) erro
 		Update("id_estado", 11).Error
 }
 
+// UpdateMedidasInfo actualiza la información de medidas de un funcionario
+func (r *FuncionarioRepository) UpdateMedidasInfo(ctx context.Context, idFuncionario int, idMedidas int) error {
+	return r.db.WithContext(ctx).Model(&funcionario.Funcionario{}).
+		Where("id_funcionario = ?", idFuncionario).
+		Updates(map[string]interface{}{
+			"id_medidas":         idMedidas,
+			"tallas_registradas": true,
+			"fecha_modificación": time.Now(),
+		}).Error
+}
+
 // MedidasRepository implementa las operaciones de medidas
 type MedidasRepository struct {
 	db *gorm.DB
@@ -333,6 +345,19 @@ func NewMedidasRepository(db *gorm.DB) *MedidasRepository {
 
 // Create crea nuevas medidas
 func (r *MedidasRepository) Create(ctx context.Context, medidas *funcionario.MedidasFuncionario) error {
+	// FIX: Calcular ID manualmente ya que la tabla "Medidas Funcionario" parece no tener autoincrement configurado en BD
+	var maxID sql.NullInt64
+	err := r.db.WithContext(ctx).Raw(`SELECT MAX(id_medidas) FROM "Medidas Funcionario"`).Scan(&maxID).Error
+	if err != nil {
+		return fmt.Errorf("error obteniendo max id de medidas: %w", err)
+	}
+
+	nextID := 1
+	if maxID.Valid {
+		nextID = int(maxID.Int64) + 1
+	}
+	medidas.IDMedidas = nextID
+
 	return r.db.WithContext(ctx).Create(medidas).Error
 }
 

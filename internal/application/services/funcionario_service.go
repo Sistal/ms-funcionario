@@ -295,12 +295,7 @@ func (s *FuncionarioService) CreateMedidas(ctx context.Context, idFuncionario in
 	}
 
 	// Actualizar el funcionario con el ID de las nuevas medidas
-	f.IDMedidas = &medidas.IDMedidas
-	f.TallasRegistradas = true
-	now := time.Now()
-	f.FechaModificacion = &now
-
-	return s.repo.Update(ctx, f)
+	return s.repo.UpdateMedidasInfo(ctx, idFuncionario, medidas.IDMedidas)
 }
 
 // GetMedidasActivas obtiene las medidas activas de un funcionario

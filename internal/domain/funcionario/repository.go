@@ -46,6 +46,9 @@ type Repository interface {
 	// Activación/Desactivación
 	ActivateByID(ctx context.Context, id int) error
 	DeactivateByID(ctx context.Context, id int) error
+
+	// Actualización de medidas
+	UpdateMedidasInfo(ctx context.Context, idFuncionario int, idMedidas int) error
 }
 
 // MedidasRepository define las operaciones de persistencia para MedidasFuncionario
